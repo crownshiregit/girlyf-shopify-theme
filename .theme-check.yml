@@ -1,0 +1,8 @@
+root: .
+
+# Vendor Horizon ships incomplete locale coverage and long templates; neither is
+# ours to fix, and both drown out real offences in Girlyf-authored files.
+MatchingTranslations:
+  enabled: false
+TemplateLength:
+  enabled: false

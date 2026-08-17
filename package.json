@@ -1,0 +1,19 @@
+{
+  "name": "girlyf-shopify-theme",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Girlyf storefront — Shopify theme, catalogue architecture and the fill sheet handed to the Girlyf team",
+  "scripts": {
+    "test": "node --test \"scripts/**/*.test.mjs\"",
+    "check": "npm run check:liquid && npm test",
+    "check:liquid": "shopify theme check --path .",
+    "sheet:check": "node scripts/build-import-csv.mjs sheet/girlyf-fill-sheet-template.csv --validate",
+    "sheet:build": "node scripts/build-import-csv.mjs",
+    "dev": "shopify theme dev --store ffaznr-4y.myshopify.com --theme-editor-sync",
+    "pull": "shopify theme pull --store ffaznr-4y.myshopify.com --theme \"Girlyf — build\" --nodelete",
+    "push": "shopify theme push --store ffaznr-4y.myshopify.com --theme \"Girlyf — build\""
+  },
+  "engines": {
+    "node": ">=22.12"
+  }
+}
