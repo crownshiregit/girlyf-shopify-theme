@@ -60,7 +60,16 @@ rgba(0,0,0,0)`, is transparency rather than a colour and stays.
 
 ### Typography
 
-Bodoni Moda for display, Poppins for body, per the guidelines:
+Bodoni Moda for display, Poppins for body, per the guidelines. **Both are in
+Shopify's font library — verified on a rendered page**, which deletes the build
+checklist's "load the display font via custom font upload" step entirely:
+
+```
+--font-heading--family: "Bodoni Moda", serif
+--font-body--family: Poppins, sans-serif
+/cdn/fonts/bodoni_moda/bodonimoda_n6.…woff2
+```
+
 
 | Setting | Value |
 |---|---|

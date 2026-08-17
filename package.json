@@ -9,6 +9,7 @@
     "check:liquid": "shopify theme check --path .",
     "sheet:check": "node scripts/build-import-csv.mjs sheet/girlyf-fill-sheet-template.csv --validate",
     "sheet:build": "node scripts/build-import-csv.mjs",
+    "homepage:build": "node scripts/build-homepage.mjs",
     "data:authorize": "node scripts/shopify-data/authorize.mjs",
     "data:plan": "node scripts/shopify-data/apply.mjs --dry-run",
     "data:apply": "node scripts/shopify-data/apply.mjs",
