@@ -1,0 +1,145 @@
+{
+  "_comment": [
+    "Collections. Every one of them is RULE-BASED, never hand-curated — a product",
+    "joins by carrying the right tag or hitting the right price, so nobody has to",
+    "remember to file it. See decisions/categories-created-before-they-are-published.md.",
+    "",
+    "TEN CATEGORIES, FIXED BY THE BRAND GUIDELINES. A category is what a piece IS.",
+    "A product carries exactly one `category:` tag, or the `combo` tag, never both.",
+    "",
+    "ALL TEN ARE CREATED NOW AND PUBLISHED LATER. Rules exist from day one so a",
+    "product files itself the moment it is added — no migration, no re-tagging, no",
+    "nav surgery when a shoot finally lands. Seven of the ten have no photography",
+    "yet; that is a queue, not a blocker.",
+    "",
+    "NOT IN HERE: Best Sellers and Newly Launched. Shopify can SORT by sales rank",
+    "and publish date but cannot SELECT by them, so an automated collection named",
+    "Best Sellers would contain the worst sellers too, at the bottom. Both are",
+    "homepage rows instead — see decisions/best-sellers-is-a-homepage-row-not-a-collection.md.",
+    "",
+    "`edit:*` collections are not in here either, on purpose. Seasonal groupings",
+    "are created by the Girlyf team in the admin when they want one, and",
+    "unpublished when they are done. This file is for the permanent structure."
+  ],
+
+  "publication_policy": {
+    "_comment": [
+      "A category joins the main menu only when BOTH are true. Everything is",
+      "created regardless.",
+      "",
+      "A menu link to an empty grid reads as a broken store, not a forthcoming one.",
+      "",
+      "NOTE: the reference build imports 2 necklaces and 1 pair of earrings, so at",
+      "that point NO category passes min_products. That is the gate working, not a",
+      "bug — but it means the storefront has no category nav until Girlyf fill the",
+      "sheet properly. Raise it with them rather than quietly lowering the number."
+    ],
+    "min_products": 3,
+    "requires_hero_image": true
+  },
+
+  "categories": [
+    {
+      "handle": "necklaces",
+      "title": "Necklaces",
+      "descriptionHtml": "<p>Pendants, lariats and layered chains. Wear one, or wear three.</p>",
+      "rule": { "column": "TAG", "relation": "EQUALS", "condition": "category:necklaces" },
+      "_photography": "shot"
+    },
+    {
+      "handle": "earrings",
+      "title": "Earrings",
+      "descriptionHtml": "<p>Studs, clovers and huggies — close to the ear and light enough to forget.</p>",
+      "rule": { "column": "TAG", "relation": "EQUALS", "condition": "category:earrings" },
+      "_photography": "shot"
+    },
+    {
+      "handle": "bracelets-bangles",
+      "title": "Bracelets & Bangles",
+      "descriptionHtml": "<p>Cuffs, charm chains and stacks, for one wrist or both.</p>",
+      "rule": { "column": "TAG", "relation": "EQUALS", "condition": "category:bracelets-bangles" },
+      "_photography": "shot"
+    },
+    {
+      "handle": "rings",
+      "title": "Rings",
+      "descriptionHtml": "<p>Fine bands made to sit beside each other. Sized, or free size.</p>",
+      "rule": { "column": "TAG", "relation": "EQUALS", "condition": "category:rings" },
+      "_photography": "brief only"
+    },
+    {
+      "handle": "anklets",
+      "title": "Anklets",
+      "descriptionHtml": "<p>Delicate chains and small charms, for the summer of it.</p>",
+      "rule": { "column": "TAG", "relation": "EQUALS", "condition": "category:anklets" },
+      "_photography": "brief only"
+    },
+    {
+      "handle": "jhumkas-ethnic-sets",
+      "title": "Jhumkas / Ethnic Sets",
+      "descriptionHtml": "<p>Jhumkas and matching sets, for the occasions that ask for them.</p>",
+      "rule": { "column": "TAG", "relation": "EQUALS", "condition": "category:jhumkas-ethnic-sets" },
+      "_photography": "brief only"
+    },
+    {
+      "handle": "hair-accessories",
+      "title": "Hair Accessories",
+      "descriptionHtml": "<p>Clips, pins and pearls — the quiet finish to everything else.</p>",
+      "rule": { "column": "TAG", "relation": "EQUALS", "condition": "category:hair-accessories" },
+      "_photography": "brief only"
+    },
+    {
+      "handle": "waist-chains",
+      "title": "Waist Chains",
+      "descriptionHtml": "<p>Fine layered chains, worn where they are noticed.</p>",
+      "rule": { "column": "TAG", "relation": "EQUALS", "condition": "category:waist-chains" },
+      "_photography": "brief only"
+    },
+    {
+      "handle": "watches",
+      "title": "Watches",
+      "descriptionHtml": "<p>Slim gold-tone watches, mother-of-pearl dials, quietly done.</p>",
+      "rule": { "column": "TAG", "relation": "EQUALS", "condition": "category:watches" },
+      "_photography": "brief only"
+    },
+    {
+      "handle": "keychains-charms",
+      "title": "Keychains / Charms",
+      "descriptionHtml": "<p>Small charms and keychains — the easiest thing to gift.</p>",
+      "rule": { "column": "TAG", "relation": "EQUALS", "condition": "category:keychains-charms" },
+      "_photography": "brief only"
+    }
+  ],
+
+  "merchandising": [
+    {
+      "handle": "combos",
+      "title": "Combos & Gift Sets",
+      "descriptionHtml": "<p>Pieces boxed together and made to be worn at once.</p>",
+      "rule": { "column": "TAG", "relation": "EQUALS", "condition": "combo" },
+      "_why": "Combos carry `combo` and no category tag, so they never sit on a category page competing with the pieces inside them."
+    },
+    {
+      "handle": "under-500",
+      "title": "Under ₹500",
+      "descriptionHtml": "<p>Everything under five hundred rupees.</p>",
+      "rule": { "column": "VARIANT_PRICE", "relation": "LESS_THAN", "condition": "500" },
+      "_why": "A genuine rule on a fact Shopify already holds. Needs no tag, and cannot go stale."
+    },
+    {
+      "handle": "sale",
+      "title": "Sale",
+      "descriptionHtml": "<p>Reduced, while they last.</p>",
+      "rule": { "column": "VARIANT_COMPARE_AT_PRICE", "relation": "GREATER_THAN", "condition": "0" },
+      "_why": "A product is on sale exactly when it has a was-price. The fill sheet's Compare At column is the whole mechanism. Note this also catches every combo, which is correct — a combo that saves nothing has no reason to exist."
+    },
+    {
+      "handle": "shop-all",
+      "title": "Shop All",
+      "descriptionHtml": "<p>The whole shop, most popular first.</p>",
+      "rule": { "column": "VARIANT_PRICE", "relation": "GREATER_THAN", "condition": "0" },
+      "sortOrder": "BEST_SELLING",
+      "_why": "The honest version of a Best Sellers page, and the catch-all a ten-category menu otherwise lacks. Named for what it contains, sorted by what people actually buy."
+    }
+  ]
+}

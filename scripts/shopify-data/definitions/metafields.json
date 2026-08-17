@@ -1,0 +1,65 @@
+{
+  "_comment": [
+    "Metafield definitions. Four of them, and each exists because something on a",
+    "page needs a fact that Shopify has no native field for.",
+    "",
+    "EVERY DEFINITION IS PINNED. An unpinned definition is invisible in the admin",
+    "form, and the Girlyf team would reasonably conclude the feature is missing.",
+    "Pinning is not cosmetic here — it is the difference between a field they use",
+    "and a field they never find.",
+    "",
+    "There are no metaobjects. Girlyf has no fact that two products would share",
+    "the identical text of — unlike Homingo, whose material and care copy is keyed",
+    "by material family. If that changes, a metaobject is the right answer, not a",
+    "fifth metafield copied around.",
+    "",
+    "Definition changes are ADDITIVE ONLY. A definition present in the store but",
+    "absent here is left alone. Changing a type after products reference it is a",
+    "migration, not an edit — see decisions/three-kinds-of-product-video.md."
+  ],
+
+  "definitions": [
+    {
+      "name": "Free size",
+      "namespace": "custom",
+      "key": "free_size",
+      "ownerType": "PRODUCT",
+      "type": "boolean",
+      "pin": true,
+      "description": "Set by the fill-sheet importer, not by hand. True when a ring is adjustable rather than sized, and the theme renders it as a badge. Only rings answer this at all — a necklace leaves it blank.",
+      "_why": "The checklist asked for adjustable pieces to be 'labelled clearly to reduce returns'. A badge driven by data does that; words someone remembers to type into a title do not."
+    },
+    {
+      "name": "Reels",
+      "namespace": "custom",
+      "key": "reels",
+      "ownerType": "PRODUCT",
+      "type": "list.file_reference",
+      "pin": true,
+      "description": "Styled vertical clips, usually repurposed from Instagram. These render in their own strip, deliberately NOT in the product media gallery. A worn/turning trust video belongs in the gallery instead — upload that as ordinary product media.",
+      "validations": [{ "name": "file_type_options", "value": "[\"Video\"]" }],
+      "_why": "A 9:16 marketing clip sitting between two packshots makes the gallery incoherent. Different role, different surface."
+    },
+    {
+      "name": "Combo contains",
+      "namespace": "custom",
+      "key": "combo_items",
+      "ownerType": "PRODUCT",
+      "type": "list.product_reference",
+      "pin": true,
+      "description": "The individual pieces inside a pre-packed combo. Lets the product page say what is in the box and link to each piece. Set this by hand, once per combo — the fill sheet lists handles, which are not Shopify references.",
+      "_why": "A combo without this is a mystery box with a photo. It is also the one field the sheet describes but cannot deliver."
+    },
+    {
+      "name": "Category tile clip",
+      "namespace": "custom",
+      "key": "tile_clip",
+      "ownerType": "COLLECTION",
+      "type": "file_reference",
+      "pin": true,
+      "description": "A 3–5 second loop standing in for this category's static tile image. Muted, no audio track, under 8MB, with a poster frame. One per category.",
+      "validations": [{ "name": "file_type_options", "value": "[\"Video\"]" }],
+      "_why": "A Shopify collection has one image field and no video field, so the guidelines' looping category tiles are not expressible natively."
+    }
+  ]
+}

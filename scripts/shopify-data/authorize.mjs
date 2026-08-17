@@ -1,0 +1,217 @@
+#!/usr/bin/env node
+// One-time OAuth exchange that produces the Admin API token.
+//
+//   npm run data:authorize
+//
+// WHY THIS EXISTS
+// The Dev Dashboard does not show an Admin API token anywhere — that reveal was
+// part of the in-admin custom-app flow Shopify closed to merchants on 1 Jan
+// 2026. The token is now something you EXCHANGE FOR, once. This does that.
+//
+// It starts a local server on :3456, opens the store's OAuth consent screen, and
+// swaps the returned code for an OFFLINE access token, which does not expire.
+// Paste the printed token into SHOPIFY_ADMIN_TOKEN and never run this again —
+// unless scopes change, in which case release a new app version first.
+
+import { createServer } from 'node:http';
+import { randomBytes, createHmac, timingSafeEqual } from 'node:crypto';
+import { spawn } from 'node:child_process';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import {
+  loadEnv, require_, normaliseStore, EXPECTED_STORE, ROOT,
+  SCOPES, REDIRECT_PORT, REDIRECT_URI,
+} from './client.mjs';
+
+/**
+ * Write the token into .env in place. The token never goes through a clipboard,
+ * a terminal transcript or a chat — the three places credentials leak from.
+ */
+const writeToken = (token) => {
+  const path = join(ROOT, '.env');
+  const lines = readFileSync(path, 'utf8').split('\n');
+  let replaced = false;
+  const updated = lines.map((line) => {
+    if (/^\s*SHOPIFY_ADMIN_TOKEN\s*=/.test(line)) {
+      replaced = true;
+      return `SHOPIFY_ADMIN_TOKEN=${token}`;
+    }
+    return line;
+  });
+  if (!replaced) updated.push(`SHOPIFY_ADMIN_TOKEN=${token}`);
+  writeFileSync(path, updated.join('\n'));
+  return path;
+};
+
+/** Enough to confirm it landed, not enough to be a credential. */
+const mask = (token) => `${token.slice(0, 6)}…${token.slice(-4)} (${token.length} chars)`;
+
+const env = loadEnv();
+const [rawStore, clientId, clientSecret] = require_(env, [
+  'SHOPIFY_STORE', 'SHOPIFY_CLIENT_ID', 'SHOPIFY_CLIENT_SECRET',
+]);
+const store = normaliseStore(rawStore);
+
+if (store !== EXPECTED_STORE) {
+  console.error(`\nSHOPIFY_STORE is ${store}, but this repo is for ${EXPECTED_STORE}.`);
+  console.error('Refusing to authorize against a different store.\n');
+  process.exit(2);
+}
+
+if (env.SHOPIFY_ADMIN_TOKEN) {
+  console.log('\nSHOPIFY_ADMIN_TOKEN is already set. Offline tokens do not expire,');
+  console.log('so you only need to re-run this if the app\'s SCOPES changed.\n');
+  console.log('Re-run anyway with:  node scripts/shopify-data/authorize.mjs --force\n');
+  if (!process.argv.includes('--force')) process.exit(0);
+}
+
+const state = randomBytes(16).toString('hex');
+
+const consentUrl =
+  `https://${store}/admin/oauth/authorize` +
+  `?client_id=${encodeURIComponent(clientId)}` +
+  `&scope=${encodeURIComponent(SCOPES.join(','))}` +
+  `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+  `&state=${state}` +
+  `&grant_options[]=`; // empty = OFFLINE token. A per-user token would expire.
+
+/** Shopify signs the callback query. Verifying it is cheap and worth doing. */
+const hmacValid = (params) => {
+  const received = params.get('hmac');
+  if (!received) return false;
+  const message = [...params.entries()]
+    .filter(([k]) => k !== 'hmac' && k !== 'signature')
+    .sort(([a], [b]) => (a < b ? -1 : 1))
+    .map(([k, v]) => `${k}=${v}`)
+    .join('&');
+  const expected = createHmac('sha256', clientSecret).update(message).digest('hex');
+  const a = Buffer.from(expected, 'utf8');
+  const b = Buffer.from(received, 'utf8');
+  return a.length === b.length && timingSafeEqual(a, b);
+};
+
+const page = (title, body) =>
+  `<!doctype html><meta charset="utf-8"><title>${title}</title>` +
+  `<body style="font:16px/1.6 system-ui;max-width:34rem;margin:4rem auto;padding:0 1rem">` +
+  `<h1 style="font-size:1.3rem">${title}</h1>${body}</body>`;
+
+const finish = (code) => {
+  server.close();
+  process.exit(code);
+};
+
+const server = createServer(async (req, res) => {
+  const url = new URL(req.url, `http://localhost:${REDIRECT_PORT}`);
+  if (url.pathname !== '/callback') {
+    res.writeHead(404).end('Not found');
+    return;
+  }
+
+  const params = url.searchParams;
+
+  console.log(`\nCallback: ${[...params.keys()].filter((k) => k !== 'hmac').join(', ')}`);
+
+  // HMAC is the hard gate. Signed with the client secret, it proves the callback
+  // genuinely came from Shopify, which is the property that actually matters.
+  if (!hmacValid(params)) {
+    res.writeHead(400, { 'Content-Type': 'text/html' })
+      .end(page('Signature invalid', '<p>The callback signature did not verify against the client secret.</p>'));
+    console.error('\nHMAC did not verify. Is SHOPIFY_CLIENT_SECRET the right one for this app?');
+    console.error('It is the app\'s own secret, not the store password and not the API key.\n');
+    return finish(1);
+  }
+
+  // `state` guards against CSRF in a multi-user web app. This is a single-user
+  // script on one machine, and the install link generated by the Dev Dashboard
+  // starts its own OAuth round with its own state, landing on this same URL.
+  // Rejecting that is unhelpful when the HMAC has already verified.
+  if (params.get('state') !== state) {
+    console.log('⚠ state did not match — this callback came from a different OAuth start');
+    console.log('  (most likely the Dev Dashboard install link). Continuing: HMAC verified.');
+  }
+
+  if (!params.get('code')) {
+    res.writeHead(400, { 'Content-Type': 'text/html' })
+      .end(page('No authorization code', '<p>See the terminal.</p>'));
+    console.error('\nNo `code` in the callback, so there is nothing to exchange.');
+    console.error('If the app is not installed on the store yet, install it from the');
+    console.error('Dev Dashboard custom-distribution link first, then run this again.\n');
+    return finish(1);
+  }
+
+  try {
+    const response = await fetch(`https://${store}/admin/oauth/access_token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        client_id: clientId,
+        client_secret: clientSecret,
+        code: params.get('code'),
+      }),
+    });
+
+    const payload = await response.json();
+
+    if (!response.ok || !payload.access_token) {
+      res.writeHead(500, { 'Content-Type': 'text/html' })
+        .end(page('Exchange failed', '<p>See the terminal.</p>'));
+      console.error(`\nToken exchange failed: ${response.status}`);
+      console.error(JSON.stringify(payload, null, 2));
+      return finish(1);
+    }
+
+    res.writeHead(200, { 'Content-Type': 'text/html' })
+      .end(page('Done — token is in your terminal', '<p>You can close this tab.</p>'));
+
+    const granted = (payload.scope || '').split(',').filter(Boolean).sort();
+    const missing = SCOPES.filter((s) => !granted.includes(s));
+
+    const path = writeToken(payload.access_token);
+
+    console.log('\n─────────────────────────────────────────────────────────────');
+    console.log(`✓ SHOPIFY_ADMIN_TOKEN written to ${path}`);
+    console.log(`  ${mask(payload.access_token)}`);
+    console.log('  Offline token — it does not expire. Nothing to copy.');
+    console.log('─────────────────────────────────────────────────────────────');
+    console.log(`Scopes granted: ${granted.join(', ') || '(none reported)'}`);
+
+    if (missing.length) {
+      console.log(`\n⚠ NOT granted: ${missing.join(', ')}`);
+      console.log('  The app configuration was probably saved but not RELEASED.');
+      console.log('  Release a new version, then run this again — a token never');
+      console.log('  picks up scopes it was not granted with.');
+    } else {
+      console.log('\n✓ Every scope this repo needs was granted.');
+    }
+    console.log('');
+    return finish(missing.length ? 1 : 0);
+  } catch (error) {
+    res.writeHead(500, { 'Content-Type': 'text/html' }).end(page('Exchange failed', '<p>See the terminal.</p>'));
+    console.error(`\n${error.message}\n`);
+    return finish(1);
+  }
+});
+
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`\nPort ${REDIRECT_PORT} is already in use. Close whatever holds it and retry.`);
+    console.error('The port is not arbitrary — it must match the app\'s allowed redirect URL.\n');
+    process.exit(1);
+  }
+  throw error;
+});
+
+server.listen(REDIRECT_PORT, () => {
+  console.log(`\nStore:  ${store}`);
+  console.log(`Scopes: ${SCOPES.join(', ')}`);
+  console.log(`\nListening on ${REDIRECT_URI}`);
+  console.log('\nOpening the consent screen. If it does not open, visit:\n');
+  console.log(consentUrl);
+  console.log('');
+
+  const opener = process.platform === 'darwin' ? 'open'
+    : process.platform === 'win32' ? 'start' : 'xdg-open';
+  spawn(opener, [consentUrl], { stdio: 'ignore', detached: true, shell: process.platform === 'win32' })
+    .on('error', () => {})
+    .unref();
+});

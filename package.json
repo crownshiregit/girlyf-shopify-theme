@@ -9,6 +9,9 @@
     "check:liquid": "shopify theme check --path .",
     "sheet:check": "node scripts/build-import-csv.mjs sheet/girlyf-fill-sheet-template.csv --validate",
     "sheet:build": "node scripts/build-import-csv.mjs",
+    "data:authorize": "node scripts/shopify-data/authorize.mjs",
+    "data:plan": "node scripts/shopify-data/apply.mjs --dry-run",
+    "data:apply": "node scripts/shopify-data/apply.mjs",
     "dev": "shopify theme dev --store ffaznr-4y.myshopify.com --theme-editor-sync",
     "pull": "shopify theme pull --store ffaznr-4y.myshopify.com --theme \"Girlyf — build\" --nodelete",
     "push": "shopify theme push --store ffaznr-4y.myshopify.com --theme \"Girlyf — build\""
