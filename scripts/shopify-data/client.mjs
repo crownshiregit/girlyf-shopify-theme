@@ -8,8 +8,17 @@ import { fileURLToPath } from 'node:url';
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..');
 
-/** The store this repo is for. A token for any other store is a mistake. */
-export const EXPECTED_STORE = 'ffaznr-4y.myshopify.com';
+/**
+ * The store this repo is for. A token for any other store is a mistake, so this
+ * is a committed constant rather than a second reading of SHOPIFY_STORE — a
+ * guard that compares .env against .env guards nothing.
+ *
+ * It lives in package.json so the theme CLI commands there and this guard cannot
+ * disagree. Moving to a new store is that one line, plus a fresh token.
+ */
+export const EXPECTED_STORE = JSON.parse(
+  readFileSync(join(ROOT, 'package.json'), 'utf8'),
+).config.store;
 
 /**
  * The scopes the app must have been RELEASED with. Kept here as well as in
@@ -24,7 +33,21 @@ export const SCOPES = [
   'read_inventory',
   'write_inventory',
   'write_files',
+
 ];
+
+/**
+ * Asked for, but the scripts work without them, so their absence is not a
+ * failure. Both only widen what DIAGNOSTICS can see:
+ *
+ *   read_locations         a location's `name`. seed-demo reads only its id,
+ *                          which needs no scope at all.
+ *   read_product_listings  `publishedOnCurrentPublication`, for checking by
+ *                          hand whether a product reached the storefront.
+ *
+ * Add them to the app version if you want them; nothing breaks either way.
+ */
+export const OPTIONAL_SCOPES = ['read_locations', 'read_product_listings'];
 
 export const REDIRECT_PORT = 3456;
 export const REDIRECT_URI = `http://localhost:${REDIRECT_PORT}/callback`;

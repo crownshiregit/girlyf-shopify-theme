@@ -69,7 +69,7 @@ test('every emitted tag is namespaced', () => {
 
 test('a combo gets the combo tag and no category tag', () => {
   const rows = toShopifyRows(sheet([
-    { 'Product Name': 'Duo Box', Category: 'Combo', 'Compare At': '899',
+    { 'Product Name': 'Duo Box', Category: 'combo', 'Compare At': '899',
       'Combo Contains': 'geo-lariat-necklace, heart-charm-necklace' },
   ]));
   assert.equal(rows[0].Tags, 'combo, material:gold-plated');
@@ -135,9 +135,9 @@ test('rejects prices with symbols or separators', () => {
 });
 
 test('rejects combo contents on a non-combo, and a combo with none', () => {
-  assert.match(errorsFor([{ 'Combo Contains': 'a,b' }]).join(), /Only rows with Category "Combo"/);
+  assert.match(errorsFor([{ 'Combo Contains': 'a,b' }]).join(), /Only rows with Category "combo"/);
   assert.match(
-    errorsFor([{ Category: 'Combo', 'Combo Contains': '' }]).join(),
+    errorsFor([{ Category: 'combo', 'Combo Contains': '' }]).join(),
     /must list the handles/,
   );
 });
@@ -176,7 +176,7 @@ test('Draft status is not published', () => {
 
 test('combo contents are reported for manual linking', () => {
   const links = comboLinks(sheet([
-    { 'Product Name': 'Duo Box', Category: 'Combo', 'Compare At': '899',
+    { 'Product Name': 'Duo Box', Category: 'combo', 'Compare At': '899',
       'Combo Contains': 'geo-lariat-necklace, heart-charm-necklace' },
   ]));
   assert.deepEqual(links, [{

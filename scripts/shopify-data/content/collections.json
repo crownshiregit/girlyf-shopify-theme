@@ -50,70 +50,70 @@
       "handle": "necklaces",
       "title": "Necklaces",
       "descriptionHtml": "<p>Pendants, lariats and layered chains. Wear one, or wear three.</p>",
-      "rule": { "column": "TAG", "relation": "EQUALS", "condition": "category:necklaces" },
+      "rule": { "column": "PRODUCT_METAFIELD_DEFINITION", "metafield": "custom.category", "relation": "EQUALS", "condition": "necklaces" },
       "_photography": "shot"
     },
     {
       "handle": "earrings",
       "title": "Earrings",
-      "descriptionHtml": "<p>Studs, clovers and huggies — close to the ear and light enough to forget.</p>",
-      "rule": { "column": "TAG", "relation": "EQUALS", "condition": "category:earrings" },
+      "descriptionHtml": "<p>Studs, clovers and huggies, close to the ear and light enough to forget.</p>",
+      "rule": { "column": "PRODUCT_METAFIELD_DEFINITION", "metafield": "custom.category", "relation": "EQUALS", "condition": "earrings" },
       "_photography": "shot"
     },
     {
       "handle": "bracelets-bangles",
       "title": "Bracelets & Bangles",
       "descriptionHtml": "<p>Cuffs, charm chains and stacks, for one wrist or both.</p>",
-      "rule": { "column": "TAG", "relation": "EQUALS", "condition": "category:bracelets-bangles" },
+      "rule": { "column": "PRODUCT_METAFIELD_DEFINITION", "metafield": "custom.category", "relation": "EQUALS", "condition": "bracelets-bangles" },
       "_photography": "shot"
     },
     {
       "handle": "rings",
       "title": "Rings",
       "descriptionHtml": "<p>Fine bands made to sit beside each other. Sized, or free size.</p>",
-      "rule": { "column": "TAG", "relation": "EQUALS", "condition": "category:rings" },
+      "rule": { "column": "PRODUCT_METAFIELD_DEFINITION", "metafield": "custom.category", "relation": "EQUALS", "condition": "rings" },
       "_photography": "brief only"
     },
     {
       "handle": "anklets",
       "title": "Anklets",
       "descriptionHtml": "<p>Delicate chains and small charms, for the summer of it.</p>",
-      "rule": { "column": "TAG", "relation": "EQUALS", "condition": "category:anklets" },
+      "rule": { "column": "PRODUCT_METAFIELD_DEFINITION", "metafield": "custom.category", "relation": "EQUALS", "condition": "anklets" },
       "_photography": "brief only"
     },
     {
       "handle": "jhumkas-ethnic-sets",
       "title": "Jhumkas / Ethnic Sets",
       "descriptionHtml": "<p>Jhumkas and matching sets, for the occasions that ask for them.</p>",
-      "rule": { "column": "TAG", "relation": "EQUALS", "condition": "category:jhumkas-ethnic-sets" },
+      "rule": { "column": "PRODUCT_METAFIELD_DEFINITION", "metafield": "custom.category", "relation": "EQUALS", "condition": "jhumkas-ethnic-sets" },
       "_photography": "brief only"
     },
     {
       "handle": "hair-accessories",
       "title": "Hair Accessories",
-      "descriptionHtml": "<p>Clips, pins and pearls — the quiet finish to everything else.</p>",
-      "rule": { "column": "TAG", "relation": "EQUALS", "condition": "category:hair-accessories" },
+      "descriptionHtml": "<p>Clips, pins and pearls: the quiet finish to everything else.</p>",
+      "rule": { "column": "PRODUCT_METAFIELD_DEFINITION", "metafield": "custom.category", "relation": "EQUALS", "condition": "hair-accessories" },
       "_photography": "brief only"
     },
     {
       "handle": "waist-chains",
       "title": "Waist Chains",
       "descriptionHtml": "<p>Fine layered chains, worn where they are noticed.</p>",
-      "rule": { "column": "TAG", "relation": "EQUALS", "condition": "category:waist-chains" },
+      "rule": { "column": "PRODUCT_METAFIELD_DEFINITION", "metafield": "custom.category", "relation": "EQUALS", "condition": "waist-chains" },
       "_photography": "brief only"
     },
     {
       "handle": "watches",
       "title": "Watches",
       "descriptionHtml": "<p>Slim gold-tone watches, mother-of-pearl dials, quietly done.</p>",
-      "rule": { "column": "TAG", "relation": "EQUALS", "condition": "category:watches" },
+      "rule": { "column": "PRODUCT_METAFIELD_DEFINITION", "metafield": "custom.category", "relation": "EQUALS", "condition": "watches" },
       "_photography": "brief only"
     },
     {
       "handle": "keychains-charms",
       "title": "Keychains / Charms",
-      "descriptionHtml": "<p>Small charms and keychains — the easiest thing to gift.</p>",
-      "rule": { "column": "TAG", "relation": "EQUALS", "condition": "category:keychains-charms" },
+      "descriptionHtml": "<p>Small charms and keychains, the easiest thing to gift.</p>",
+      "rule": { "column": "PRODUCT_METAFIELD_DEFINITION", "metafield": "custom.category", "relation": "EQUALS", "condition": "keychains-charms" },
       "_photography": "brief only"
     }
   ],
@@ -123,7 +123,7 @@
       "handle": "combos",
       "title": "Combos & Gift Sets",
       "descriptionHtml": "<p>Pieces boxed together and made to be worn at once.</p>",
-      "rule": { "column": "TAG", "relation": "EQUALS", "condition": "combo" },
+      "rule": { "column": "PRODUCT_METAFIELD_DEFINITION", "metafield": "custom.category", "relation": "EQUALS", "condition": "combo" },
       "_why": "Combos carry `combo` and no category tag, so they never sit on a category page competing with the pieces inside them."
     },
     {

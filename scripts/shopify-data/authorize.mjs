@@ -20,7 +20,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   loadEnv, require_, normaliseStore, EXPECTED_STORE, ROOT,
-  SCOPES, REDIRECT_PORT, REDIRECT_URI,
+  SCOPES, OPTIONAL_SCOPES, REDIRECT_PORT, REDIRECT_URI,
 } from './client.mjs';
 
 /**
@@ -70,7 +70,7 @@ const state = randomBytes(16).toString('hex');
 const consentUrl =
   `https://${store}/admin/oauth/authorize` +
   `?client_id=${encodeURIComponent(clientId)}` +
-  `&scope=${encodeURIComponent(SCOPES.join(','))}` +
+  `&scope=${encodeURIComponent(SCOPES.concat(OPTIONAL_SCOPES).join(','))}` +
   `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
   `&state=${state}` +
   `&grant_options[]=`; // empty = OFFLINE token. A per-user token would expire.
@@ -164,7 +164,19 @@ const server = createServer(async (req, res) => {
       .end(page('Done — token is in your terminal', '<p>You can close this tab.</p>'));
 
     const granted = (payload.scope || '').split(',').filter(Boolean).sort();
-    const missing = SCOPES.filter((s) => !granted.includes(s));
+
+    // Shopify grants what the RELEASED app version declares, not what this
+    // request asked for, and every `write_x` carries `read_x` with it. So a
+    // literal set difference reports read_products as missing whenever
+    // write_products was granted — a false alarm that sends you off releasing
+    // an app version that was never the problem.
+    const satisfies = (scope) =>
+      granted.includes(scope) ||
+      (scope.startsWith('read_') && granted.includes(`write_${scope.slice(5)}`));
+
+    const missing = SCOPES.filter((s) => !satisfies(s));
+    const missingOptional = OPTIONAL_SCOPES.filter((s) => !satisfies(s));
+    const extra = granted.filter((g) => !SCOPES.includes(g));
 
     const path = writeToken(payload.access_token);
 
@@ -175,13 +187,24 @@ const server = createServer(async (req, res) => {
     console.log('─────────────────────────────────────────────────────────────');
     console.log(`Scopes granted: ${granted.join(', ') || '(none reported)'}`);
 
+    if (missingOptional.length) {
+      console.log(`Not granted, and not needed: ${missingOptional.join(', ')}`);
+      console.log('  Diagnostics only. Every script in this repo runs without them.');
+    }
+
+    if (extra.length) {
+      console.log(`Also granted, beyond what this repo asks for: ${extra.join(', ')}`);
+      console.log('  Harmless, but it means the app version declares its own scope');
+      console.log('  list. That list is what Shopify honours.');
+    }
+
     if (missing.length) {
       console.log(`\n⚠ NOT granted: ${missing.join(', ')}`);
       console.log('  The app configuration was probably saved but not RELEASED.');
       console.log('  Release a new version, then run this again — a token never');
       console.log('  picks up scopes it was not granted with.');
     } else {
-      console.log('\n✓ Every scope this repo needs was granted.');
+      console.log('\n✓ Every scope this repo needs is covered.');
     }
     console.log('');
     return finish(missing.length ? 1 : 0);

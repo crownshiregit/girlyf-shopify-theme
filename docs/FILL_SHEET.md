@@ -36,7 +36,7 @@ where they can be tested.
 | Column | Kind | Required | Rule |
 |---|---|---|---|
 | `Product Name` | text | yes | Short and evocative — "Geo Lariat Necklace", never "Necklace 12" |
-| `Category` | dropdown | yes | One of the ten, or `Combo`. Never both |
+| `Category` | dropdown | yes | One of the ten, or `combo`. Never both |
 | `Material` | dropdown | yes | `gold-plated` · `oxidised` · `pearl` · `stone` |
 | `Material 2` | dropdown | no | For pieces that are genuinely two materials |
 | `Size` | dropdown | rings only | `Free Size` · `S` · `M` · `L`. Blank for everything else |
@@ -86,7 +86,7 @@ Nothing except rings uses `Size`.
 
 ## 4. Combos
 
-A combo has `Category` = `Combo`, and gets the `combo` tag instead of a category
+A combo has `Category` = `combo`, and gets the `combo` tag instead of a category
 tag — so it never appears on a category page competing with the very pieces it
 contains.
 

@@ -23,6 +23,11 @@ import {
 const args = new Set(process.argv.slice(2));
 const DRY_RUN = args.has('--dry-run');
 
+// Re-pointing a live collection's rule is a MIGRATION, not an edit — every
+// product's membership is recomputed by Shopify the moment it lands. So it is
+// opt-in and loud, rather than something a changed JSON file does quietly.
+const MIGRATE_RULES = args.has('--migrate-rules');
+
 const read = (relative) => {
   const raw = JSON.parse(readFileSync(join(ROOT, 'scripts/shopify-data', relative), 'utf8'));
   // `_`-prefixed keys are documentation for humans and never sent.
@@ -72,7 +77,10 @@ log(`\n${DRY_RUN ? 'PLAN (nothing will be sent)' : 'APPLY'} → ${store}  api ${
 const DEFINITION_QUERY = `
   query($ownerType: MetafieldOwnerType!) {
     metafieldDefinitions(first: 250, ownerType: $ownerType) {
-      nodes { id namespace key type { name } pinnedPosition }
+      nodes {
+        id namespace key type { name } pinnedPosition
+        capabilities { smartCollectionCondition { eligible enabled } }
+      }
     }
   }`;
 
@@ -83,6 +91,9 @@ const DEFINITION_CREATE = `
       userErrors { field message code }
     }
   }`;
+
+/** `namespace.key` → definition id, for collection rules that key off one. */
+const definitionIds = new Map();
 
 log('\nMetafield definitions');
 
@@ -107,13 +118,28 @@ for (const definition of metafields.definitions) {
     (d) => d.namespace === definition.namespace && d.key === definition.key,
   );
 
+  const wantsRuleCapability = definition.capabilities?.smartCollectionCondition?.enabled === true;
+
   if (existing) {
+    definitionIds.set(`${definition.namespace}.${definition.key}`, existing.id);
+    const condition = existing.capabilities?.smartCollectionCondition;
+
     if (existing.type?.name !== definition.type) {
       step(`DRIFT  ${label}: store has ${existing.type?.name}, this file says ${definition.type}`);
       drifted.push(`${label} — type differs, not migrated`);
     } else if (existing.pinnedPosition === null) {
       step(`exists ${label} — but NOT PINNED. Pin it in the admin, or it stays invisible.`);
       drifted.push(`${label} — unpinned`);
+    } else if (wantsRuleCapability && !condition?.enabled) {
+      // Without this, a collection rule on the field cannot be created at all —
+      // and the enum accepts PRODUCT_METAFIELD_DEFINITION regardless, so the
+      // failure arrives later and reads like a bad rule rather than a missing
+      // opt-in.
+      step(
+        `DRIFT  ${label}: collection-condition capability is OFF` +
+          (condition?.eligible === false ? ' and this type is NOT ELIGIBLE for it.' : '.'),
+      );
+      drifted.push(`${label} — smartCollectionCondition disabled, categories cannot key off it`);
     } else {
       step(`exists ${label}`);
       skipped.push(label);
@@ -121,18 +147,37 @@ for (const definition of metafields.definitions) {
     continue;
   }
 
-  await gql(DEFINITION_CREATE, { definition });
-  step(`created ${label} (${definition.type}, pinned)`);
+  const { metafieldDefinitionCreate } = await gql(DEFINITION_CREATE, { definition });
+  definitionIds.set(
+    `${definition.namespace}.${definition.key}`,
+    metafieldDefinitionCreate.createdDefinition.id,
+  );
+  step(
+    `created ${label} (${definition.type}, pinned` +
+      (wantsRuleCapability ? ', collection-condition on' : '') +
+      ')',
+  );
   created.push(label);
 }
 
 // --- 2. collections ---------------------------------------------------------
 
+// `collectionByHandle` was removed from the Admin API — it does not exist in
+// 2026-07. A handle lookup is a filtered query now.
 const COLLECTION_BY_HANDLE = `
-  query($handle: String!) {
-    collectionByHandle(handle: $handle) {
-      id title sortOrder
-      ruleSet { rules { column relation condition } }
+  query($q: String!) {
+    collections(first: 1, query: $q) {
+      nodes {
+        id title sortOrder
+        ruleSet {
+          rules {
+            column relation condition
+            conditionObject {
+              ... on CollectionRuleMetafieldCondition { metafieldDefinition { id namespace key } }
+            }
+          }
+        }
+      }
     }
   }`;
 
@@ -143,6 +188,49 @@ const COLLECTION_CREATE = `
       userErrors { field message }
     }
   }`;
+
+const COLLECTION_UPDATE = `
+  mutation($input: CollectionInput!) {
+    collectionUpdate(input: $input) {
+      collection { id handle }
+      userErrors { field message }
+    }
+  }`;
+
+/**
+ * A rule in collections.json names its metafield as `custom.category`; the API
+ * wants the definition's id in `conditionObjectId`. Resolve late, so the file
+ * stays readable and stays valid across stores — ids differ per store.
+ */
+const toRuleInput = (rule, handle) => {
+  const { metafield, ...rest } = rule;
+  if (!metafield) return rest;
+
+  const id = definitionIds.get(metafield);
+  if (!id) {
+    throw new Error(
+      `Collection "${handle}" keys off metafield ${metafield}, which has no definition.\n` +
+        'Definitions are created earlier in this same run, so this means it is absent from\n' +
+        'definitions/metafields.json — or its type is not eligible to be a collection condition.',
+    );
+  }
+  return { ...rest, conditionObjectId: id };
+};
+
+/** What the store currently has, in the same shape, so the two can be compared. */
+const storeRuleOf = (found) => {
+  const rule = found.ruleSet?.rules?.[0];
+  if (!rule) return null;
+  return {
+    column: rule.column,
+    relation: rule.relation,
+    condition: rule.condition,
+    conditionObjectId: rule.conditionObject?.metafieldDefinition?.id,
+  };
+};
+
+const describe = (rule) =>
+  `${rule.column}${rule.metafield ? ` ${rule.metafield}` : ''} ${rule.relation} "${rule.condition}"`;
 
 const all = [
   ...collections.categories.map((c) => ({ ...c, kind: 'category' })),
@@ -155,41 +243,58 @@ for (const collection of all) {
   const { handle, title, descriptionHtml, rule, sortOrder } = collection;
   const label = `${handle}`;
 
-  const input = {
-    handle,
-    title,
-    descriptionHtml,
-    ruleSet: { appliedDisjunctively: false, rules: [rule] },
-    ...(sortOrder ? { sortOrder } : {}),
-  };
-
   if (DRY_RUN) {
-    step(`would create ${label.padEnd(22)} ${rule.column} ${rule.relation} "${rule.condition}"`);
+    step(`would create ${label.padEnd(22)} ${describe(rule)}`);
     created.push(label);
     continue;
   }
 
-  const found = (await gql(COLLECTION_BY_HANDLE, { handle })).collectionByHandle;
+  const ruleInput = toRuleInput(rule, handle);
+  const input = {
+    handle,
+    title,
+    descriptionHtml,
+    ruleSet: { appliedDisjunctively: false, rules: [ruleInput] },
+    ...(sortOrder ? { sortOrder } : {}),
+  };
+
+  const found = (await gql(COLLECTION_BY_HANDLE, { q: `handle:${handle}` })).collections.nodes[0];
 
   if (found) {
-    const storeRule = found.ruleSet?.rules?.[0];
+    const storeRule = storeRuleOf(found);
     const same =
       storeRule &&
-      storeRule.column === rule.column &&
-      storeRule.relation === rule.relation &&
-      storeRule.condition === rule.condition;
-    if (!same) {
-      step(`DRIFT  ${label}: store rule is ${storeRule ? `${storeRule.column} ${storeRule.relation} "${storeRule.condition}"` : '(none — hand-curated?)'}`);
-      drifted.push(`${label} — rule differs, not migrated`);
-    } else {
+      storeRule.column === ruleInput.column &&
+      storeRule.relation === ruleInput.relation &&
+      storeRule.condition === ruleInput.condition &&
+      storeRule.conditionObjectId === ruleInput.conditionObjectId;
+
+    if (same) {
       step(`exists ${label}`);
       skipped.push(label);
+      continue;
     }
+
+    const was = storeRule
+      ? `${storeRule.column} ${storeRule.relation} "${storeRule.condition}"`
+      : '(none — hand-curated?)';
+
+    if (!MIGRATE_RULES) {
+      step(`DRIFT  ${label}: store rule is ${was}`);
+      drifted.push(`${label} — rule differs, not migrated`);
+      continue;
+    }
+
+    // Explicitly asked for. Shopify recomputes membership on save, so this is
+    // the moment every product in the collection is re-evaluated.
+    await gql(COLLECTION_UPDATE, { input: { id: found.id, ruleSet: input.ruleSet } });
+    step(`MIGRATED ${label.padEnd(21)} ${was}  →  ${describe(rule)}`);
+    created.push(`${label} (rule migrated)`);
     continue;
   }
 
   await gql(COLLECTION_CREATE, { input });
-  step(`created ${label.padEnd(22)} ${rule.column} ${rule.relation} "${rule.condition}"`);
+  step(`created ${label.padEnd(22)} ${describe(rule)}`);
   created.push(label);
 }
 

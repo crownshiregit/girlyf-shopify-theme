@@ -12,9 +12,24 @@ Terms only. No implementation detail, no decisions — those live in
 
 **Category** — what a piece *is*: Necklaces, Earrings, Rings. There are exactly
 ten, they are fixed by the brand guidelines, and a product carries **exactly
-one**. Every category is an automated collection matching `category:<slug>`.
+one** — or `combo`, which is the eleventh choice rather than a separate mark.
+Held in the `custom.category` metafield, picked from a locked dropdown, and each
+category is an automated collection matching that field.
 _Avoid_: "collection" on its own, which is ambiguous between this and the next
-term.
+term. _Avoid_: "the category tag" — it was one until 2026-08-18 and is not any
+more.
+
+**Locked choice** — a metafield whose definition carries a `choices` validation,
+so the admin renders it as a dropdown and a value outside the list cannot be
+saved. Category, material and pack size are all locked choices. The point is not
+tidiness: an unlocked category fails *silently*, putting the product on no page
+at all.
+
+**Pack size** — which box a piece ships in: `pouch`, `small-box`, `bangle-box`,
+`large-box`. A named box, never measurements — the owner picks rather than
+measures, and box-to-dimensions lives in one table instead of on every product.
+Distinct from **weight**, which is Shopify's own per-variant field, in grams.
+Couriers bill on whichever of actual and volumetric weight is larger.
 
 **Merchandising collection** — a view over the catalogue that changes with
 trading, not with what the products are: Newly Launched, Best Sellers, Under
@@ -61,6 +76,23 @@ host.
 
 **Category tile clip** — a 3–5s loop standing in for a category's static tile
 image. One per category, held on the collection, not on any product.
+
+## Motion
+
+**Reveal** — a section arriving as it scrolls into view: a fade with a short
+rise, or for photography a fade with the frame opening. One-way — an element
+that has arrived never hides again. Written as `data-girlyf-reveal`, never as a
+keyframe in a section.
+_Avoid_: "fade in", which describes a third of what it does.
+
+**Drift** — media moving slowly against the scroll inside a fixed frame. Written
+as `data-girlyf-parallax`, and always on a wrapper, never on the same element as
+a reveal — both set `transform` and the loser fails silently.
+_Avoid_: "parallax" in prose; it is the attribute's name, not the effect's.
+
+**Rail** — a horizontal scroll-snapping strip that bleeds past the page margin
+so the next card is visibly cut off. The reels strip is one; category tiles are
+one on mobile.
 
 ## Brand
 

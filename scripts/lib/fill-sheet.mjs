@@ -31,7 +31,11 @@ export const SIZED_CATEGORY = 'rings';
 export const NUMBERED_SIZES = ['S', 'M', 'L'];
 export const FREE_SIZE = 'Free Size';
 
-export const COMBO = 'Combo';
+// Lowercase, because that is the vocabulary the STORE uses: it is a value in
+// the `custom.category` metafield's choices list and the condition the `combos`
+// collection rule matches on. Capitalising it here produced a product that
+// validated locally and then matched no collection at all.
+export const COMBO = 'combo';
 export const VENDOR = 'Girlyf';
 
 export const SHOPIFY_COLUMNS = [

@@ -8,6 +8,13 @@
     "Pinning is not cosmetic here — it is the difference between a field they use",
     "and a field they never find.",
     "",
+    "THE ORDER OF THIS LIST IS THE ORDER OF THE ADMIN FORM. Shopify pins in the",
+    "order definitions are created, so what decides where a product APPEARS comes",
+    "first (category, material), then how it SHIPS (pack size), then the optional",
+    "extras. A store that already had some of these will keep the old order — the",
+    "fix is unpin-all then repin in this order, and it is worth doing: category",
+    "sitting below `Reels` teaches the form wrong.",
+    "",
     "There are no metaobjects. Girlyf has no fact that two products would share",
     "the identical text of — unlike Homingo, whose material and care copy is keyed",
     "by material family. If that changes, a metaobject is the right answer, not a",
@@ -19,6 +26,52 @@
   ],
 
   "definitions": [
+    {
+      "name": "Category",
+      "namespace": "custom",
+      "key": "category",
+      "ownerType": "PRODUCT",
+      "type": "single_line_text_field",
+      "pin": true,
+      "capabilities": { "smartCollectionCondition": { "enabled": true } },
+      "description": "What this piece IS. Pick one. This is what puts the product on its category page — get it wrong and the product appears nowhere. Choose 'combo' for a boxed set of several pieces.",
+      "validations": [
+        {
+          "name": "choices",
+          "value": "[\"necklaces\",\"earrings\",\"bracelets-bangles\",\"rings\",\"anklets\",\"jhumkas-ethnic-sets\",\"hair-accessories\",\"waist-chains\",\"watches\",\"keychains-charms\",\"combo\"]"
+        }
+      ],
+      "_why": "A choices validation renders as a DROPDOWN in the admin, so `earings` is not typeable. That is the guarantee the fill sheet used to provide and the tag autocomplete never did — a mistyped category tag saves cleanly and the product silently appears in no category page at all.",
+      "_capability": "smartCollectionCondition must be enabled or the category collections CANNOT be built on this field. The enum accepts PRODUCT_METAFIELD_DEFINITION regardless; the store rejects it unless the definition opts in."
+    },
+    {
+      "name": "Material",
+      "namespace": "custom",
+      "key": "material",
+      "ownerType": "PRODUCT",
+      "type": "list.single_line_text_field",
+      "pin": true,
+      "capabilities": { "smartCollectionCondition": { "enabled": true } },
+      "description": "What it is made of. Pick one, or two for pieces that are genuinely both. Drives the storefront filters.",
+      "validations": [
+        { "name": "choices", "value": "[\"gold-plated\",\"oxidised\",\"pearl\",\"stone\"]" }
+      ],
+      "_why": "Same locked vocabulary as category, one stakes lower — a wrong material loses a filter match rather than a whole category page. A list type because a piece can honestly be two materials."
+    },
+    {
+      "name": "Pack size",
+      "namespace": "custom",
+      "key": "pack_size",
+      "ownerType": "PRODUCT",
+      "type": "single_line_text_field",
+      "pin": true,
+      "description": "Which box this ships in. The owner picks; nobody measures. Weight goes in Shopify's own weight field, in grams.",
+      "validations": [
+        { "name": "choices", "value": "[\"pouch\",\"small-box\",\"bangle-box\",\"large-box\"]" }
+      ],
+      "_why": "Indian couriers bill on max(actual, volumetric). Jewellery is light, so actual weight almost always wins and per-product L×W×H would be four more fields to guess at. A named box keeps packing consistent and lets box→dimensions live in ONE table if a courier integration ever needs volumetric.",
+      "_not_a_metafield": "Weight itself is Shopify's native per-variant field. Duplicating it here would create two answers to one question."
+    },
     {
       "name": "Free size",
       "namespace": "custom",
