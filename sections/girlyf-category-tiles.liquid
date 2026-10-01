@@ -1,0 +1,353 @@
+{%- comment -%}
+  GIRLYF — CATEGORY TILES
+
+  Shop by category, with the looping tile clip the brand guidelines asked for.
+
+  WHY THIS EXISTS RATHER THAN HORIZON'S `collection-list`
+  `custom.tile_clip` is a pinned metafield on every collection — a 3–5s loop
+  standing in for the category's static tile. Horizon's collection-list renders
+  `collection.image` and nothing else, so until this section existed the field
+  was a pinned box in the admin that the Girlyf team could fill and then watch
+  do nothing. See docs/decisions/three-kinds-of-product-video.md.
+
+  The clip is a *substitute* for the tile image, so the fallback chain is
+  clip → collection image → featured product image → Horizon placeholder. A
+  category with no photography still renders a tile rather than a hole, which is
+  what lets all ten categories exist from day one.
+{%- endcomment -%}
+
+{% liquid
+  assign section_id = section.id
+  if section.settings.background_color != blank
+    render 'contrast-override', background_color: section.settings.background_color, section_id: section_id
+  endif
+%}
+
+<div class="section-background{% if section.settings.background_color != blank %} color-custom-{{ section_id }}{% endif %}"></div>
+
+<div
+  class="section section--{{ section.settings.section_width }} spacing-style{% if section.settings.background_color != blank %} color-custom-{{ section_id }}{% endif %}"
+  style="{% render 'spacing-style', settings: section.settings %}"
+>
+  <div class="girlyf-tiles">
+    {% if section.settings.eyebrow != blank or section.settings.heading != blank %}
+      <header class="girlyf-tiles__header" data-girlyf-reveal>
+        {% if section.settings.eyebrow != blank %}
+          <p class="girlyf-eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {% endif %}
+        {% if section.settings.heading != blank %}
+          <h2 class="girlyf-heading">{{ section.settings.heading | escape }}</h2>
+        {% endif %}
+        <span class="girlyf-rule" aria-hidden="true"></span>
+      </header>
+    {% endif %}
+
+    <ul
+      class="girlyf-tiles__list girlyf-tiles__list--{{ section.settings.mobile_layout }}"
+      style="--girlyf-tiles-columns: {{ section.settings.columns }};"
+      {% if section.settings.mobile_layout == 'rail' %}
+        data-girlyf-rail
+      {% endif %}
+      role="list"
+    >
+      {% for collection in section.settings.collection_list %}
+        {% liquid
+          assign clip = collection.metafields.custom.tile_clip.value
+          assign still = collection.image | default: collection.products.first.featured_image
+          assign poster = clip.preview_image | default: still
+
+          # Staggered arrival. Capped so a ten-category row's last tile is not
+          # most of a second behind its first — past ~6 the row reads as slow
+          # rather than choreographed.
+          assign step = forloop.index0
+          if step > 5
+            assign step = 5
+          endif
+        %}
+
+        <li
+          class="girlyf-tiles__item"
+          data-girlyf-reveal
+          style="--girlyf-reveal-delay: {{ step | times: 70 }}ms;"
+        >
+          <a class="girlyf-tiles__link" href="{{ collection.url }}">
+            <span class="girlyf-tiles__frame girlyf-card-edge">
+              {%- if clip.sources.size > 0 -%}
+                <video
+                  class="girlyf-tiles__media girlyf-zoom"
+                  data-girlyf-autoplay
+                  {% if poster != blank %}
+                    poster="{{ poster | image_url: width: 800 }}"
+                  {% endif %}
+                  muted
+                  loop
+                  playsinline
+                  preload="none"
+                  tabindex="-1"
+                  aria-hidden="true"
+                >
+                  {%- comment -%}
+                    mp4 only. Shopify also publishes an m3u8, and offering HLS
+                    first makes Chrome pick a source it cannot play natively.
+                  {%- endcomment -%}
+                  {%- for source in clip.sources -%}
+                    {%- if source.format == 'mp4' -%}
+                      <source src="{{ source.url }}" type="{{ source.mime_type }}">
+                    {%- endif -%}
+                  {%- endfor -%}
+                </video>
+              {%- elsif still != blank -%}
+                {{
+                  still
+                  | image_url: width: 1000
+                  | image_tag:
+                    class: 'girlyf-tiles__media girlyf-zoom',
+                    widths: '200, 300, 400, 600, 800, 1000',
+                    sizes: '(min-width: 750px) calc(100vw / var(--girlyf-tiles-columns)), 42vw',
+                    loading: 'lazy',
+                    alt: collection.title
+                }}
+              {%- else -%}
+                <span class="girlyf-tiles__media girlyf-tiles__media--empty">
+                  {{ 'collection-1' | placeholder_svg_tag }}
+                </span>
+              {%- endif -%}
+            </span>
+
+            <span class="girlyf-tiles__label">
+              <span class="girlyf-tiles__title">{{ collection.title }}</span>
+              {%- comment -%}
+                Decorative. Gold fails the 3.0 UI threshold on Paper, so it may
+                never be the only signal that a tile is focused — the title's
+                own colour shift carries that.
+              {%- endcomment -%}
+              <span class="girlyf-tiles__underline" aria-hidden="true"></span>
+            </span>
+          </a>
+        </li>
+      {% else %}
+        <li class="girlyf-tiles__empty">Pick the categories to show in the theme editor.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+{% stylesheet %}
+  .girlyf-tiles {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-3xl);
+  }
+
+  .girlyf-tiles__header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--gap-sm);
+  }
+
+  .girlyf-tiles__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Mobile: a rail, so the cut-off next tile says there are more than two
+     categories. Desktop: the whole set at once. */
+  .girlyf-tiles__list--rail {
+    display: flex;
+    gap: var(--gap-lg);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    margin-inline: calc(var(--util-page-margin-offset, 0px) * -1);
+    padding-inline: var(--util-page-margin-offset, 0px);
+  }
+
+  .girlyf-tiles__list--rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .girlyf-tiles__list--rail > .girlyf-tiles__item {
+    flex: 0 0 42%;
+    scroll-snap-align: start;
+  }
+
+  .girlyf-tiles__list--grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--gap-lg) var(--gap-md);
+  }
+
+  @media screen and (min-width: 750px) {
+    .girlyf-tiles__list {
+      display: grid;
+      grid-template-columns: repeat(var(--girlyf-tiles-columns), minmax(0, 1fr));
+      gap: var(--gap-2xl) var(--gap-lg);
+      overflow: visible;
+      margin-inline: 0;
+      padding-inline: 0;
+    }
+
+    .girlyf-tiles__list--rail > .girlyf-tiles__item {
+      flex: initial;
+    }
+  }
+
+  .girlyf-tiles__link {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-sm);
+    text-decoration: none;
+    color: inherit;
+  }
+
+  /* The frame is fixed; the media inside it is what scales on hover. */
+  .girlyf-tiles__frame {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 4 / 5;
+    border-radius: var(--card-corner-radius, 4px);
+    background-color: var(--girlyf-cream);
+  }
+
+  .girlyf-tiles__media {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .girlyf-tiles__media--empty svg {
+    inline-size: 100%;
+    block-size: 100%;
+    opacity: 0.35;
+  }
+
+  .girlyf-tiles__label {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35em;
+  }
+
+  .girlyf-tiles__title {
+    font-family: var(--font-heading--family);
+    font-size: var(--font-size--h4);
+    line-height: 1.2;
+    color: var(--color-foreground);
+    transition: color var(--girlyf-hover-duration, 320ms) var(--girlyf-ease, ease);
+  }
+
+  .girlyf-tiles__underline {
+    display: block;
+    block-size: 1px;
+    inline-size: 100%;
+    background: var(--girlyf-gold);
+    transform-origin: left center;
+    scale: 0 1;
+  }
+
+  @media (hover: hover) {
+    .girlyf-tiles__link:hover .girlyf-tiles__title,
+    .girlyf-tiles__link:focus-visible .girlyf-tiles__title {
+      color: var(--girlyf-cocoa);
+    }
+  }
+
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .girlyf-tiles__underline {
+      transition: scale var(--girlyf-hover-duration, 320ms) var(--girlyf-ease, ease);
+    }
+  }
+
+  .girlyf-tiles__link:hover .girlyf-tiles__underline,
+  .girlyf-tiles__link:focus-visible .girlyf-tiles__underline {
+    scale: 1 1;
+  }
+
+  .girlyf-tiles__empty {
+    color: var(--girlyf-cocoa);
+    font-family: var(--font-body--family);
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Girlyf category tiles",
+  "tag": "section",
+  "class": "section-wrapper",
+  "disabled_on": { "groups": ["header", "footer"] },
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "A tile plays the collection's Category tile clip when it has one, and shows the collection image when it does not."
+    },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "The collection" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Shop by category" },
+    {
+      "type": "collection_list",
+      "id": "collection_list",
+      "label": "Categories",
+      "limit": 12
+    },
+    { "type": "header", "content": "Layout" },
+    {
+      "type": "range",
+      "id": "columns",
+      "label": "Columns on desktop",
+      "min": 2,
+      "max": 6,
+      "step": 1,
+      "default": 5
+    },
+    {
+      "type": "select",
+      "id": "mobile_layout",
+      "label": "On mobile",
+      "options": [
+        { "value": "rail", "label": "Scrolling rail" },
+        { "value": "grid", "label": "Two-column grid" }
+      ],
+      "default": "rail"
+    },
+    {
+      "type": "select",
+      "id": "section_width",
+      "label": "Width",
+      "options": [
+        { "value": "page-width", "label": "Page" },
+        { "value": "full-width", "label": "Full" }
+      ],
+      "default": "page-width"
+    },
+    { "type": "color", "id": "background_color", "label": "Background", "placeholder": "Default" },
+    { "type": "header", "content": "Padding" },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top",
+      "min": 0,
+      "max": 160,
+      "step": 4,
+      "unit": "px",
+      "default": 72
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 160,
+      "step": 4,
+      "unit": "px",
+      "default": 72
+    }
+  ],
+  "presets": [{ "name": "Girlyf category tiles", "category": "Girlyf" }]
+}
+{% endschema %}

@@ -1,0 +1,310 @@
+{%- comment -%}
+  GIRLYF — HERO
+
+  Replaces Horizon's `hero` on the homepage. Two reasons, and only the second is
+  about looks:
+
+  1. MEASURED CONTRAST. Paper type laid directly over the August 2026 shoot reads
+     1.7–4.3:1 across a headline — under the 3:1 floor for display type, because
+     the shoot is ivory satin in bright natural light. Clearing 4.5:1 for the
+     eyebrow and button would take ~85% Espresso, which is a wall, not an
+     overlay. Horizon's hero can only put text ON the media, so on this
+     photography it cannot be made accessible. The words go on a plate instead:
+     Paper on Espresso is 15.23:1, and stays true of every photograph Girlyf
+     upload next.
+
+  2. Horizon's hero renders its no-image placeholder at natural size, which on a
+     store with no hero set produces a screen-and-a-half of illustrated SVG. A
+     fixed section height is the difference between "not configured yet" and
+     "broken".
+
+  The plate is Espresso where the brand story's is Paper — deliberately the
+  inverse, so the two full-bleed moments read as a pair rather than a repeat. It
+  is also, not incidentally, the Girlyf business card that sits in this very
+  photograph.
+
+  Media, drift and the line reveal all work exactly as girlyf-brand-story's do;
+  the two sections share every token in assets/girlyf-motion.css.
+{%- endcomment -%}
+
+{% liquid
+  assign video = section.settings.video
+  assign image = section.settings.image
+  assign lines = section.settings.heading | strip | newline_to_br | split: '<br />'
+  assign overlay = section.settings.overlay_opacity | divided_by: 100.0
+%}
+
+<div
+  class="girlyf-hero girlyf-hero--{{ section.settings.text_position }}"
+  style="
+    --girlyf-hero-height: {{ section.settings.height }}svh;
+    --girlyf-hero-overlay: {{ overlay }};
+  "
+>
+  <div class="girlyf-hero__frame" data-girlyf-reveal="media">
+    <span class="girlyf-hero__media" data-girlyf-parallax="70">
+      {%- if video != blank and video.sources.size > 0 -%}
+        <video
+          data-girlyf-autoplay
+          {% if video.preview_image != blank %}
+            poster="{{ video.preview_image | image_url: width: 1600 }}"
+          {% endif %}
+          muted
+          loop
+          playsinline
+          preload="none"
+          tabindex="-1"
+          aria-hidden="true"
+        >
+          {%- for source in video.sources -%}
+            {%- if source.format == 'mp4' -%}
+              <source src="{{ source.url }}" type="{{ source.mime_type }}">
+            {%- endif -%}
+          {%- endfor -%}
+        </video>
+      {%- elsif image != blank -%}
+        {{
+          image
+          | image_url: width: 3000
+          | image_tag:
+            widths: '600, 900, 1200, 1600, 2000, 2600, 3000',
+            sizes: '100vw',
+            fetchpriority: 'high',
+            alt: image.alt
+        }}
+      {%- else -%}
+        {{ 'hero-apparel-1' | placeholder_svg_tag }}
+      {%- endif -%}
+    </span>
+
+    <span class="girlyf-hero__scrim" aria-hidden="true"></span>
+  </div>
+
+  <div class="girlyf-hero__plate" data-girlyf-reveal>
+    {% if section.settings.eyebrow != blank %}
+      <p class="girlyf-hero__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+    {% endif %}
+
+    {% if lines.size > 0 %}
+      <h1 class="girlyf-hero__heading girlyf-lines" data-girlyf-reveal="lines">
+        {%- for line in lines -%}
+          {%- assign copy = line | strip_html | strip -%}
+          {%- if copy != blank -%}
+            <span class="girlyf-lines__mask">
+              <span class="girlyf-lines__line" style="--girlyf-line-index: {{ forloop.index0 }};">
+                {{- copy -}}
+              </span>
+            </span>
+          {%- endif -%}
+        {%- endfor -%}
+      </h1>
+    {% endif %}
+
+    <span class="girlyf-rule girlyf-hero__rule" aria-hidden="true"></span>
+
+    {% if section.settings.button_label != blank %}
+      <a class="girlyf-hero__button" href="{{ section.settings.button_link | default: '#' }}">
+        {{ section.settings.button_label | escape }}
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+{% stylesheet %}
+  .girlyf-hero {
+    position: relative;
+    display: grid;
+    align-items: end;
+    min-block-size: var(--girlyf-hero-height, 85svh);
+    isolation: isolate;
+    overflow: hidden;
+    background-color: var(--girlyf-cream);
+  }
+
+  .girlyf-hero__frame,
+  .girlyf-hero__plate {
+    grid-area: 1 / 1;
+  }
+
+  .girlyf-hero__frame {
+    position: relative;
+    block-size: 100%;
+    inline-size: 100%;
+    overflow: hidden;
+  }
+
+  .girlyf-hero__media {
+    position: absolute;
+    inset: 0;
+    display: block;
+  }
+
+  .girlyf-hero__media > * {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    object-position: 50% 42%;
+  }
+
+  /* Mood only. The type is on a plate, so nothing here is load-bearing. */
+  .girlyf-hero__scrim {
+    position: absolute;
+    inset: 0;
+    background-color: rgb(var(--color-foreground-rgb) / var(--girlyf-hero-overlay, 0.2));
+    pointer-events: none;
+  }
+
+  .girlyf-hero__plate {
+    position: relative;
+    z-index: 1;
+    align-self: end;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--gap-lg);
+    background-color: var(--color-foreground);
+    border-radius: var(--card-corner-radius, 4px);
+    margin: var(--page-margin);
+    padding: var(--gap-2xl);
+  }
+
+  @media screen and (min-width: 750px) {
+    .girlyf-hero__plate {
+      justify-self: start;
+      inline-size: min(32rem, 44vw);
+      margin: max(var(--page-margin), 3vw);
+      padding: 2.75rem;
+    }
+
+    .girlyf-hero--centre .girlyf-hero__plate {
+      justify-self: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .girlyf-hero--centre .girlyf-rule {
+      transform-origin: center;
+    }
+
+    .girlyf-hero--end .girlyf-hero__plate {
+      justify-self: end;
+    }
+  }
+
+  /* Paper on Espresso: 15.23:1. Every colour is a palette role — the section
+     never introduces a white. */
+  .girlyf-hero__eyebrow {
+    margin: 0;
+    font-family: var(--font-body--family);
+    font-size: var(--font-size--h6);
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgb(var(--color-background-rgb) / 0.72);
+  }
+
+  .girlyf-hero__heading {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-size: var(--font-size--h2);
+    line-height: 1.06;
+    color: var(--color-background);
+    text-wrap: pretty;
+  }
+
+  @media screen and (min-width: 990px) {
+    .girlyf-hero__heading {
+      font-size: var(--font-size--h1);
+    }
+  }
+
+  .girlyf-hero__rule {
+    --girlyf-rule-width: 4rem;
+  }
+
+  .girlyf-hero__button {
+    display: inline-block;
+    font-family: var(--font-body--family);
+    font-size: var(--font-size--h5);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--color-background);
+    border: 1px solid rgb(var(--color-background-rgb) / 0.6);
+    border-radius: var(--button-border-radius-secondary, 14px);
+    padding: 0.9em 2.2em;
+    transition:
+      background-color var(--girlyf-hover-duration, 320ms) var(--girlyf-ease, ease),
+      color var(--girlyf-hover-duration, 320ms) var(--girlyf-ease, ease),
+      border-color var(--girlyf-hover-duration, 320ms) var(--girlyf-ease, ease);
+  }
+
+  .girlyf-hero__button:hover,
+  .girlyf-hero__button:focus-visible {
+    background-color: var(--color-background);
+    border-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Girlyf hero",
+  "tag": "section",
+  "class": "section-wrapper",
+  "disabled_on": { "groups": ["header", "footer"] },
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Video wins when both are set. The words sit on their own panel, so any photograph works — no overlay tuning needed to keep them readable."
+    },
+    { "type": "video", "id": "video", "label": "Video" },
+    { "type": "image_picker", "id": "image", "label": "Image" },
+    { "type": "header", "content": "Words" },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Fashion ornaments · ₹100–2,000" },
+    {
+      "type": "textarea",
+      "id": "heading",
+      "label": "Heading",
+      "info": "Each line rises on its own. Break the lines where you want them.",
+      "default": "Adorn your\nelegance always"
+    },
+    { "type": "text", "id": "button_label", "label": "Button", "default": "Shop new in" },
+    { "type": "url", "id": "button_link", "label": "Button link" },
+    { "type": "header", "content": "Layout" },
+    {
+      "type": "select",
+      "id": "text_position",
+      "label": "Panel position",
+      "options": [
+        { "value": "start", "label": "Left" },
+        { "value": "centre", "label": "Centre" },
+        { "value": "end", "label": "Right" }
+      ],
+      "default": "start"
+    },
+    {
+      "type": "range",
+      "id": "height",
+      "label": "Height",
+      "min": 50,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 85
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "label": "Overlay",
+      "info": "Sets the mood of the photograph only.",
+      "min": 0,
+      "max": 60,
+      "step": 5,
+      "unit": "%",
+      "default": 20
+    }
+  ],
+  "presets": [{ "name": "Girlyf hero", "category": "Girlyf" }]
+}
+{% endschema %}

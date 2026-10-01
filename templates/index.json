@@ -10,135 +10,25 @@
 {
   "sections": {
     "hero": {
-      "type": "hero",
-      "blocks": {
-        "text_YLPk4p": {
-          "type": "text",
-          "name": "t:names.heading",
-          "settings": {
-            "text": "<p>Adorn Your Elegance Always</p>",
-            "width": "fit-content",
-            "max_width": "normal",
-            "alignment": "left",
-            "type_preset": "h1",
-            "font": "var(--font-heading--family)",
-            "font_size": "",
-            "line_height": "normal",
-            "letter_spacing": "normal",
-            "case": "none",
-            "wrap": "pretty",
-            "text_color": "{{ settings.color_palette.background }}",
-            "background": false,
-            "background_color": "#00000026",
-            "corner_radius": 0,
-            "padding-block-start": 0,
-            "padding-block-end": 0,
-            "padding-inline-start": 0,
-            "padding-inline-end": 0
-          },
-          "blocks": {}
-        },
-        "button_H9gpTf": {
-          "type": "button",
-          "name": "t:names.button",
-          "settings": {
-            "label": "Shop New In",
-            "link": "shopify://collections/new-in",
-            "open_in_new_tab": false,
-            "style_class": "button-custom",
-            "custom_button_background": "rgba(0,0,0,0)",
-            "custom_button_text": "{{ settings.color_palette.background }}",
-            "custom_button_border": "{{ settings.color_palette.background }}",
-            "width": "fit-content",
-            "custom_width": 100,
-            "width_mobile": "fit-content",
-            "custom_width_mobile": 100
-          },
-          "blocks": {}
-        }
-      },
-      "block_order": [
-        "text_YLPk4p",
-        "button_H9gpTf"
-      ],
-      "name": "t:names.hero",
+      "type": "girlyf-hero",
+      "name": "Girlyf hero",
       "settings": {
-        "media_type_1": "image",
-        "media_type_2": "image",
-        "stack_media_on_mobile": false,
-        "custom_mobile_media": true,
-        "media_type_1_mobile": "image",
-        "media_type_2_mobile": "image",
-        "open_in_new_tab": false,
-        "content_direction": "column",
-        "vertical_on_mobile": true,
-        "horizontal_alignment": "space-between",
-        "vertical_alignment": "flex-end",
-        "align_baseline": true,
-        "horizontal_alignment_flex_direction_column": "center",
-        "vertical_alignment_flex_direction_column": "flex-end",
-        "gap": 24,
-        "section_width": "page-width",
-        "section_height": "medium",
-        "section_height_custom": 50,
-        "background_color": "rgba(0,0,0,0)",
-        "toggle_overlay": true,
-        "overlay_color": "#12121266",
-        "overlay_style": "solid",
-        "gradient_direction": "to bottom",
-        "blurred_reflection": false,
-        "reflection_opacity": 75,
-        "padding-block-start": 100,
-        "padding-block-end": 72
+        "image": "shopify://shop_images/girlyf-home-hero.jpg",
+        "eyebrow": "Fashion ornaments · ₹100–2,000",
+        "heading": "Adorn your\nelegance always",
+        "button_label": "Shop new in",
+        "button_link": "shopify://collections/new-in",
+        "text_position": "start",
+        "height": 85,
+        "overlay_opacity": 20
       }
     },
     "shop_by_category": {
-      "type": "collection-list",
-      "blocks": {
-        "static-collection-card": {
-          "type": "_collection-card",
-          "name": "t:names.collection_card",
-          "static": true,
-          "settings": {
-            "placement": "on_image",
-            "horizontal_alignment": "flex-start",
-            "vertical_alignment": "flex-end",
-            "border": "none",
-            "border_radius": 0
-          },
-          "blocks": {
-            "collection-card-image": {
-              "type": "_collection-card-image",
-              "name": "t:names.collection_card_image",
-              "static": true,
-              "settings": {
-                "image_ratio": "adapt"
-              }
-            },
-            "collection-title": {
-              "type": "collection-title",
-              "name": "t:names.collection_title",
-              "settings": {
-                "width": "fit-content",
-                "alignment": "left",
-                "type_preset": "h6",
-                "font": "var(--font-heading--family)",
-                "background": true,
-                "background_color": "{{ settings.color_palette.background }}",
-                "padding-block-start": 4,
-                "padding-block-end": 4,
-                "padding-inline-start": 8,
-                "padding-inline-end": 8
-              }
-            }
-          },
-          "block_order": [
-            "collection-title"
-          ]
-        }
-      },
-      "name": "t:names.collection_list",
+      "type": "girlyf-category-tiles",
+      "name": "Girlyf category tiles",
       "settings": {
+        "eyebrow": "The collection",
+        "heading": "Shop by category",
         "collection_list": [
           "necklaces",
           "earrings",
@@ -151,13 +41,11 @@
           "watches",
           "keychains-charms"
         ],
-        "layout_type": "grid",
-        "carousel_on_mobile": true,
         "columns": 5,
-        "mobile_columns": "2",
+        "mobile_layout": "rail",
         "section_width": "page-width",
-        "padding-block-start": 32,
-        "padding-block-end": 32
+        "padding-block-start": 72,
+        "padding-block-end": 72
       }
     },
     "newly_launched": {
@@ -203,8 +91,8 @@
                 "width": "fit-content",
                 "max_width": "normal",
                 "alignment": "left",
-                "type_preset": "h4",
-                "font": "var(--font-body--family)",
+                "type_preset": "h2",
+                "font": "var(--font-heading--family)",
                 "line_height": "normal",
                 "letter_spacing": "normal",
                 "case": "none",
@@ -259,7 +147,7 @@
               "type": "_product-card-gallery",
               "name": "t:names.product_card_media",
               "settings": {
-                "image_ratio": "adapt",
+                "image_ratio": "portrait",
                 "border": "none",
                 "border_width": 1,
                 "border_opacity": 100,
@@ -305,8 +193,8 @@
                 "type_preset": "h6",
                 "width": "100%",
                 "alignment": "left",
-                "font": "var(--font-body--family)",
-                "font_size": "1rem",
+                "font": "var(--font-heading--family)",
+                "font_size": "1.0625rem",
                 "line_height": "normal",
                 "letter_spacing": "normal",
                 "case": "none",
@@ -342,8 +230,8 @@
         "horizontal_alignment": "flex-start",
         "gap": 28,
         "background_color": "{{ settings.color_palette.background }}",
-        "padding-block-start": 48,
-        "padding-block-end": 48
+        "padding-block-start": 72,
+        "padding-block-end": 72
       }
     },
     "best_sellers": {
@@ -389,8 +277,8 @@
                 "width": "fit-content",
                 "max_width": "normal",
                 "alignment": "left",
-                "type_preset": "h4",
-                "font": "var(--font-body--family)",
+                "type_preset": "h2",
+                "font": "var(--font-heading--family)",
                 "line_height": "normal",
                 "letter_spacing": "normal",
                 "case": "none",
@@ -445,7 +333,7 @@
               "type": "_product-card-gallery",
               "name": "t:names.product_card_media",
               "settings": {
-                "image_ratio": "adapt",
+                "image_ratio": "portrait",
                 "border": "none",
                 "border_width": 1,
                 "border_opacity": 100,
@@ -491,8 +379,8 @@
                 "type_preset": "h6",
                 "width": "100%",
                 "alignment": "left",
-                "font": "var(--font-body--family)",
-                "font_size": "1rem",
+                "font": "var(--font-heading--family)",
+                "font_size": "1.0625rem",
                 "line_height": "normal",
                 "letter_spacing": "normal",
                 "case": "none",
@@ -528,8 +416,8 @@
         "horizontal_alignment": "flex-start",
         "gap": 28,
         "background_color": "{{ settings.color_palette.background }}",
-        "padding-block-start": 48,
-        "padding-block-end": 48
+        "padding-block-start": 72,
+        "padding-block-end": 72
       }
     },
     "combos": {
@@ -575,8 +463,8 @@
                 "width": "fit-content",
                 "max_width": "normal",
                 "alignment": "left",
-                "type_preset": "h4",
-                "font": "var(--font-body--family)",
+                "type_preset": "h2",
+                "font": "var(--font-heading--family)",
                 "line_height": "normal",
                 "letter_spacing": "normal",
                 "case": "none",
@@ -631,7 +519,7 @@
               "type": "_product-card-gallery",
               "name": "t:names.product_card_media",
               "settings": {
-                "image_ratio": "adapt",
+                "image_ratio": "portrait",
                 "border": "none",
                 "border_width": 1,
                 "border_opacity": 100,
@@ -677,8 +565,8 @@
                 "type_preset": "h6",
                 "width": "100%",
                 "alignment": "left",
-                "font": "var(--font-body--family)",
-                "font_size": "1rem",
+                "font": "var(--font-heading--family)",
+                "font_size": "1.0625rem",
                 "line_height": "normal",
                 "letter_spacing": "normal",
                 "case": "none",
@@ -714,8 +602,93 @@
         "horizontal_alignment": "flex-start",
         "gap": 28,
         "background_color": "{{ settings.color_palette.background }}",
-        "padding-block-start": 48,
-        "padding-block-end": 48
+        "padding-block-start": 72,
+        "padding-block-end": 72
+      }
+    },
+    "shop_the_look": {
+      "type": "girlyf-shop-the-look",
+      "name": "Girlyf shop the look",
+      "settings": {
+        "eyebrow": "In motion",
+        "heading": "Shop the look",
+        "description": "Every piece, worn and turning, the way it looks off the page.",
+        "collection": "new-in",
+        "reels_per_product": 1,
+        "max_reels": 10,
+        "padding-block-start": 80,
+        "padding-block-end": 80
+      }
+    },
+    "brand_story": {
+      "type": "girlyf-brand-story",
+      "name": "Girlyf brand story",
+      "settings": {
+        "image": "shopify://shop_images/girlyf-home-story.jpg",
+        "eyebrow": "Girlyf",
+        "heading": "Adorn your\nelegance always",
+        "body": "Ornaments don’t just decorate you. They celebrate you. Gold-plated, tarnish-free, and made for the days you want to feel like yourself only more so.",
+        "button_label": "Shop new in",
+        "button_link": "shopify://collections/new-in",
+        "text_position": "start",
+        "height": 85,
+        "overlay_opacity": 15
+      }
+    },
+    "instagram": {
+      "type": "girlyf-instagram",
+      "blocks": {
+        "tile_1": {
+          "type": "_girlyf-instagram-tile",
+          "name": "Instagram post",
+          "settings": {
+            "image": "shopify://shop_images/girlyf-feed-1.jpg",
+            "post_url": "https://www.instagram.com/girlyf.in/"
+          }
+        },
+        "tile_2": {
+          "type": "_girlyf-instagram-tile",
+          "name": "Instagram post",
+          "settings": {
+            "image": "shopify://shop_images/girlyf-feed-2.jpg",
+            "post_url": "https://www.instagram.com/girlyf.in/"
+          }
+        },
+        "tile_3": {
+          "type": "_girlyf-instagram-tile",
+          "name": "Instagram post",
+          "settings": {
+            "image": "shopify://shop_images/girlyf-feed-3.jpg",
+            "post_url": "https://www.instagram.com/girlyf.in/"
+          }
+        },
+        "tile_4": {
+          "type": "_girlyf-instagram-tile",
+          "name": "Instagram post",
+          "settings": {
+            "image": "shopify://shop_images/girlyf-feed-4.jpg",
+            "post_url": "https://www.instagram.com/girlyf.in/"
+          }
+        }
+      },
+      "block_order": [
+        "tile_1",
+        "tile_2",
+        "tile_3",
+        "tile_4"
+      ],
+      "name": "Girlyf Instagram",
+      "settings": {
+        "eyebrow": "Follow",
+        "heading": "@girlyf.in",
+        "description": "Styling, new arrivals and the pieces that sell out first.",
+        "profile_url": "https://www.instagram.com/girlyf.in/",
+        "button_label": "Follow on Instagram",
+        "columns": 4,
+        "image_ratio": "4 / 5",
+        "section_width": "page-width",
+        "padding-block-start": 80,
+        "padding-block-end": 80
       }
     },
     "trust_strip": {
@@ -789,7 +762,7 @@
           "type": "text",
           "name": "t:names.text",
           "settings": {
-            "text": "<p>Ornaments don’t just decorate you — they celebrate you</p>",
+            "text": "<p>Ornaments don’t just decorate you. They celebrate you</p>",
             "width": "fit-content",
             "type_preset": "custom",
             "font": "var(--font-body--family)",
@@ -824,7 +797,10 @@
     "shop_by_category",
     "newly_launched",
     "best_sellers",
+    "shop_the_look",
+    "brand_story",
     "combos",
+    "instagram",
     "trust_strip"
   ]
 }

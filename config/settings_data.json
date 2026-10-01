@@ -108,7 +108,8 @@
       "color1": "#E7D9C4",
       "color2": "#61493D",
       "color3": "#C6A15B"
-    }
+    },
+    "logo": "shopify://shop_images/girlyf-logo-badge.png"
   },
   "presets": {
     "Horizon": {

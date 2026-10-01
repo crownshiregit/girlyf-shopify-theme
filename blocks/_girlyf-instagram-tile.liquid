@@ -1,0 +1,98 @@
+{%- comment -%}
+  GIRLYF — ONE INSTAGRAM TILE
+
+  Underscore-prefixed, following Horizon's convention for a block that only
+  makes sense inside one section. A tile is an uploaded still plus the URL of
+  the post it came from; outside `girlyf-instagram` it means nothing, so it is
+  not offered anywhere else.
+
+  A THEME BLOCK, NOT A LOCAL ONE. Horizon derives sections from files in
+  `blocks/` and a section that declares blocks inline fails to register at all —
+  reported, unhelpfully, as "section type does not refer to an existing section
+  file".
+
+  The block finds its own position with `find_index`, the same way `_slide`
+  does. That is what makes the diagonal stagger possible without the section
+  being able to pass a loop counter in.
+{%- endcomment -%}
+
+{% liquid
+  assign block_settings = block.settings
+  assign columns = section.settings.columns | default: 4
+
+  # The wave runs from the top-left corner, so a tile's delay is its column
+  # plus its row. Stepping straight through source order instead makes each
+  # row look like a separate list being typed out.
+  assign index = section.blocks | find_index: 'id', block.id
+  assign column = index | modulo: columns
+  assign row = index | divided_by: columns
+  assign step = column | plus: row
+  if step > 6
+    assign step = 6
+  endif
+
+  assign alt = block_settings.alt | default: block_settings.image.alt
+%}
+
+<div
+  class="girlyf-feed__item"
+  role="listitem"
+  data-girlyf-reveal
+  style="--girlyf-reveal-delay: {{ step | times: 70 }}ms;"
+  {{ block.shopify_attributes }}
+>
+  {%- capture tile -%}
+    <span class="girlyf-feed__frame girlyf-card-edge">
+      {%- if block_settings.image != blank -%}
+        {{
+          block_settings.image
+          | image_url: width: 1200
+          | image_tag:
+            class: 'girlyf-feed__image girlyf-zoom',
+            widths: '200, 300, 400, 600, 800, 1200',
+            sizes: '(min-width: 750px) calc(100vw / var(--girlyf-feed-columns)), 45vw',
+            loading: 'lazy',
+            alt: alt
+        }}
+      {%- else -%}
+        <span class="girlyf-feed__image girlyf-feed__image--empty">
+          {{ 'lifestyle-2' | placeholder_svg_tag }}
+        </span>
+      {%- endif -%}
+      <span class="girlyf-feed__veil" aria-hidden="true"></span>
+    </span>
+  {%- endcapture -%}
+
+  {% if block_settings.post_url != blank %}
+    <a
+      class="girlyf-feed__link"
+      href="{{ block_settings.post_url }}"
+      rel="noopener"
+      target="_blank"
+    >
+      {{ tile }}
+      <span class="visually-hidden">
+        {{- alt | default: 'Open this post on Instagram' -}}
+      </span>
+    </a>
+  {% else %}
+    {{ tile }}
+  {% endif %}
+</div>
+
+{% schema %}
+{
+  "name": "Instagram post",
+  "tag": null,
+  "settings": [
+    { "type": "image_picker", "id": "image", "label": "Image" },
+    { "type": "url", "id": "post_url", "label": "Link to the post" },
+    {
+      "type": "text",
+      "id": "alt",
+      "label": "Describe the image",
+      "info": "Read aloud by screen readers. Say what is in the photograph, not “Instagram post”."
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,323 @@
+{%- comment -%}
+  GIRLYF — BRAND STORY
+
+  The full-bleed moment. `scripts/build-homepage.mjs` has listed this as "needs
+  the 20–30s video"; the video is still Girlyf's to shoot, so the section takes
+  an image or a video and is complete either way rather than waiting.
+
+  THE WORDS SIT ON A PAPER PANEL, NOT ON THE PHOTOGRAPH
+  Paper type over a scrim is the obvious layout and it cannot be made safe here.
+  The shoot is ivory satin in bright natural light; getting Paper to 4.5:1 over
+  that highlight needs roughly 80% Espresso over the image, which throws the
+  photograph away to save the sentence. A Paper panel is Espresso on Paper —
+  15.23:1, and true of every photograph Girlyf will ever upload, including the
+  ones nobody has taken yet. The overlay setting survives, but it now sets the
+  image's mood rather than carrying the legibility.
+
+  THE HEADING IS A TEXTAREA, AND ITS LINE BREAKS ARE HONOURED
+  Each line rises out of its own mask. Splitting a sentence into visual lines in
+  JavaScript is guesswork that changes with the viewport and re-flows mid
+  animation; letting whoever writes the line decide where it breaks is both more
+  reliable and — for a display serif at 56px — the decision a designer wants to
+  be making anyway.
+
+  The media drifts against the scroll. `data-girlyf-parallax` goes on the media,
+  never on the frame: both write `transform`, and the loser fails silently.
+{%- endcomment -%}
+
+{% liquid
+  assign video = section.settings.video
+  assign image = section.settings.image
+  assign lines = section.settings.heading | strip | newline_to_br | split: '<br />'
+  assign overlay = section.settings.overlay_opacity | divided_by: 100.0
+%}
+
+<div
+  class="girlyf-story girlyf-story--{{ section.settings.text_position }}"
+  style="
+    --girlyf-story-height: {{ section.settings.height }}svh;
+    --girlyf-story-overlay: {{ overlay }};
+  "
+>
+  <div class="girlyf-story__frame" data-girlyf-reveal="media">
+    {%- comment -%}
+      The drift lives on this wrapper, not on the <img> or <video> inside it.
+      An <img> from `image_tag` cannot carry a hyphenated data attribute through
+      Liquid's named arguments, and a wrapper keeps image and video on one code
+      path instead of two that have to be kept in step.
+    {%- endcomment -%}
+    <span class="girlyf-story__media" data-girlyf-parallax="60">
+      {%- if video != blank and video.sources.size > 0 -%}
+        <video
+          data-girlyf-autoplay
+          {% if video.preview_image != blank %}
+            poster="{{ video.preview_image | image_url: width: 1600 }}"
+          {% endif %}
+          muted
+          loop
+          playsinline
+          preload="none"
+          tabindex="-1"
+          aria-hidden="true"
+        >
+          {%- for source in video.sources -%}
+            {%- if source.format == 'mp4' -%}
+              <source src="{{ source.url }}" type="{{ source.mime_type }}">
+            {%- endif -%}
+          {%- endfor -%}
+        </video>
+      {%- elsif image != blank -%}
+        {{
+          image
+          | image_url: width: 3000
+          | image_tag:
+            widths: '600, 900, 1200, 1600, 2000, 2600, 3000',
+            sizes: '100vw',
+            loading: 'lazy',
+            alt: image.alt
+        }}
+      {%- else -%}
+        {{ 'lifestyle-1' | placeholder_svg_tag }}
+      {%- endif -%}
+    </span>
+
+    {%- comment -%}
+      Espresso, not black. The scrim is the one place a large area of the brand's
+      darkest role is allowed, and it exists to make Paper-coloured type legible
+      over photography nobody has seen yet.
+    {%- endcomment -%}
+    <span class="girlyf-story__scrim" aria-hidden="true"></span>
+  </div>
+
+  <div class="girlyf-story__panel" data-girlyf-reveal>
+    {% if section.settings.eyebrow != blank %}
+      <p class="girlyf-eyebrow">{{ section.settings.eyebrow | escape }}</p>
+    {% endif %}
+
+    {% if lines.size > 0 %}
+      <h2 class="girlyf-heading girlyf-story__heading girlyf-lines" data-girlyf-reveal="lines">
+        {%- for line in lines -%}
+          {%- assign copy = line | strip_html | strip -%}
+          {%- if copy != blank -%}
+            <span class="girlyf-lines__mask">
+              <span class="girlyf-lines__line" style="--girlyf-line-index: {{ forloop.index0 }};">
+                {{- copy -}}
+              </span>
+            </span>
+          {%- endif -%}
+        {%- endfor -%}
+      </h2>
+    {% endif %}
+
+    <span class="girlyf-rule girlyf-story__rule" aria-hidden="true"></span>
+
+    {% if section.settings.body != blank %}
+      <p class="girlyf-body">{{ section.settings.body | escape }}</p>
+    {% endif %}
+
+    {% if section.settings.button_label != blank %}
+      <a class="girlyf-story__button" href="{{ section.settings.button_link | default: '#' }}">
+        {{ section.settings.button_label | escape }}
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+{% stylesheet %}
+  .girlyf-story {
+    position: relative;
+    display: grid;
+    align-items: end;
+    min-block-size: var(--girlyf-story-height, 80svh);
+    isolation: isolate;
+    overflow: hidden;
+    background-color: var(--girlyf-cream);
+  }
+
+  .girlyf-story__frame,
+  .girlyf-story__panel {
+    grid-area: 1 / 1;
+  }
+
+  .girlyf-story__frame {
+    position: relative;
+    block-size: 100%;
+    inline-size: 100%;
+    overflow: hidden;
+  }
+
+  .girlyf-story__media {
+    position: absolute;
+    inset: 0;
+    display: block;
+  }
+
+  .girlyf-story__media > * {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .girlyf-story__scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      rgb(var(--color-foreground-rgb) / calc(var(--girlyf-story-overlay, 0.35) * 1.6)),
+      rgb(var(--color-foreground-rgb) / var(--girlyf-story-overlay, 0.35)) 55%,
+      rgb(var(--color-foreground-rgb) / calc(var(--girlyf-story-overlay, 0.35) * 0.5))
+    );
+    pointer-events: none;
+  }
+
+  /* The panel. Espresso on Paper is 15.23:1 whatever the photograph behind it
+     turns out to be — which is the whole reason the words are not on the image. */
+  .girlyf-story__panel {
+    position: relative;
+    z-index: 1;
+    align-self: end;
+    justify-self: stretch;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--gap-lg);
+    background-color: var(--color-background);
+    border: 1px solid rgb(var(--girlyf-cocoa-rgb) / 0.2);
+    border-radius: var(--card-corner-radius, 4px);
+    margin: var(--page-margin);
+    padding: var(--gap-2xl);
+  }
+
+  @media screen and (min-width: 750px) {
+    .girlyf-story__panel {
+      justify-self: start;
+      inline-size: min(34rem, 42vw);
+      margin: max(var(--page-margin), 3vw);
+      padding: 3rem;
+    }
+
+    .girlyf-story--centre .girlyf-story__panel {
+      justify-self: center;
+      align-self: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .girlyf-story--centre .girlyf-rule {
+      transform-origin: center;
+    }
+
+    .girlyf-story--end .girlyf-story__panel {
+      justify-self: end;
+    }
+  }
+
+  .girlyf-story__heading {
+    font-size: var(--font-size--h2);
+  }
+
+  @media screen and (min-width: 990px) {
+    .girlyf-story__heading {
+      font-size: var(--font-size--h1);
+    }
+  }
+
+  .girlyf-story__rule {
+    --girlyf-rule-width: 4.5rem;
+  }
+
+  /* The theme's primary button, by hand rather than by block, because this
+     section takes no blocks. Espresso fill, Paper label — the same pair
+     `settings.palette_primary_button_*` resolves to. */
+  .girlyf-story__button {
+    display: inline-block;
+    font-family: var(--font-body--family);
+    font-size: var(--font-size--h5);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--color-background);
+    background-color: var(--color-foreground);
+    border: 1px solid var(--color-foreground);
+    border-radius: var(--button-border-radius-primary, 14px);
+    padding: 0.9em 2.2em;
+    transition:
+      background-color var(--girlyf-hover-duration, 320ms) var(--girlyf-ease, ease),
+      color var(--girlyf-hover-duration, 320ms) var(--girlyf-ease, ease);
+  }
+
+  .girlyf-story__button:hover,
+  .girlyf-story__button:focus-visible {
+    background-color: var(--girlyf-cocoa);
+    border-color: var(--girlyf-cocoa);
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Girlyf brand story",
+  "tag": "section",
+  "class": "section-wrapper",
+  "disabled_on": { "groups": ["header", "footer"] },
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Video wins when both are set. A clip here should be muted with no audio track and under 8MB, with a poster frame."
+    },
+    { "type": "video", "id": "video", "label": "Video" },
+    { "type": "image_picker", "id": "image", "label": "Image" },
+    { "type": "header", "content": "Words" },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Girlyf" },
+    {
+      "type": "textarea",
+      "id": "heading",
+      "label": "Heading",
+      "info": "Each line rises on its own. Break the lines where you want them.",
+      "default": "Adorn your\nelegance always"
+    },
+    {
+      "type": "textarea",
+      "id": "body",
+      "label": "Body",
+      "default": "Ornaments don’t just decorate you. They celebrate you. Gold-plated, tarnish-free, and made for the days you want to feel like yourself only more so."
+    },
+    { "type": "text", "id": "button_label", "label": "Button", "default": "Shop new in" },
+    { "type": "url", "id": "button_link", "label": "Button link" },
+    { "type": "header", "content": "Layout" },
+    {
+      "type": "select",
+      "id": "text_position",
+      "label": "Text position",
+      "options": [
+        { "value": "start", "label": "Left" },
+        { "value": "centre", "label": "Centre" },
+        { "value": "end", "label": "Right" }
+      ],
+      "default": "start"
+    },
+    {
+      "type": "range",
+      "id": "height",
+      "label": "Height",
+      "min": 50,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 85
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "label": "Overlay",
+      "info": "Sets the mood of the photograph. The words sit on their own panel, so this does not affect whether they can be read.",
+      "min": 0,
+      "max": 60,
+      "step": 5,
+      "unit": "%",
+      "default": 15
+    }
+  ],
+  "presets": [{ "name": "Girlyf brand story", "category": "Girlyf" }]
+}
+{% endschema %}

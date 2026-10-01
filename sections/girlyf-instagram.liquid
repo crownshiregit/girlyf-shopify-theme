@@ -1,0 +1,317 @@
+{%- comment -%}
+  GIRLYF — FOLLOW THE FEED
+
+  `scripts/build-homepage.mjs` has listed an Instagram feed as "needs an app
+  block". This is the version that does not.
+
+  WHY NOT AN EMBED OR A FEED APP
+  The same reasoning the repo already applies to reels: Instagram is the source
+  of an image, never its host. An embed adds a third-party script to the
+  homepage, gives no control over crop or loading, and empties itself the day a
+  post is deleted or the token expires. See
+  docs/decisions/three-kinds-of-product-video.md.
+
+  So a tile is an uploaded image plus the URL of the post it came from. It is
+  hand-curated, which for nine tiles updated when the team feels like it is the
+  right trade — and unlike a live feed it can be art-directed to sit under the
+  brand story without clashing with it.
+
+  LOCAL BLOCKS, NOT THEME BLOCKS
+  A tile is an image and a link and exists only inside this section. A theme
+  block would make it insertable into a product page, where it means nothing.
+{%- endcomment -%}
+
+{% liquid
+  assign section_id = section.id
+  assign columns = section.settings.columns
+  if section.settings.background_color != blank
+    render 'contrast-override', background_color: section.settings.background_color, section_id: section_id
+  endif
+%}
+
+<div class="section-background{% if section.settings.background_color != blank %} color-custom-{{ section_id }}{% endif %}"></div>
+
+<div
+  class="section section--{{ section.settings.section_width }} spacing-style{% if section.settings.background_color != blank %} color-custom-{{ section_id }}{% endif %}"
+  style="{% render 'spacing-style', settings: section.settings %}"
+>
+  <div class="girlyf-feed">
+    <header class="girlyf-feed__header" data-girlyf-reveal>
+      {% if section.settings.eyebrow != blank %}
+        <p class="girlyf-eyebrow">{{ section.settings.eyebrow | escape }}</p>
+      {% endif %}
+
+      {% if section.settings.heading != blank %}
+        {% if section.settings.profile_url != blank %}
+          <h2 class="girlyf-heading">
+            <a class="girlyf-feed__handle" href="{{ section.settings.profile_url }}" rel="me noopener">
+              {{- section.settings.heading | escape -}}
+            </a>
+          </h2>
+        {% else %}
+          <h2 class="girlyf-heading">{{ section.settings.heading | escape }}</h2>
+        {% endif %}
+      {% endif %}
+
+      <span class="girlyf-rule" aria-hidden="true"></span>
+
+      {% if section.settings.description != blank %}
+        <p class="girlyf-body girlyf-feed__description">{{ section.settings.description | escape }}</p>
+      {% endif %}
+    </header>
+
+    {%- comment -%}
+      A div rather than a ul: `content_for 'blocks'` decides its own markup, so
+      a list whose children must be <li> is a promise this section cannot keep.
+      The roles carry the semantics instead.
+    {%- endcomment -%}
+    <div
+      class="girlyf-feed__grid"
+      style="--girlyf-feed-columns: {{ columns }}; --girlyf-feed-ratio: {{ section.settings.image_ratio }};"
+      role="list"
+    >
+      {% if section.blocks.size > 0 %}
+        {% content_for 'blocks' %}
+      {% else %}
+        <p class="girlyf-feed__empty">Add a post block to fill this grid.</p>
+      {% endif %}
+    </div>
+
+    {% if section.settings.button_label != blank and section.settings.profile_url != blank %}
+      <div class="girlyf-feed__footer" data-girlyf-reveal>
+        <a class="girlyf-feed__button" href="{{ section.settings.profile_url }}" rel="me noopener">
+          {{ section.settings.button_label | escape }}
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{% stylesheet %}
+  .girlyf-feed {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-3xl);
+  }
+
+  .girlyf-feed__header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--gap-sm);
+  }
+
+  .girlyf-feed__header .girlyf-rule {
+    transform-origin: center;
+  }
+
+  .girlyf-feed__handle {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .girlyf-feed__handle:hover,
+  .girlyf-feed__handle:focus-visible {
+    color: var(--girlyf-cocoa);
+  }
+
+  .girlyf-feed__description {
+    text-align: center;
+  }
+
+  .girlyf-feed__grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--gap-xs);
+  }
+
+  @media screen and (min-width: 750px) {
+    .girlyf-feed__grid {
+      grid-template-columns: repeat(var(--girlyf-feed-columns), minmax(0, 1fr));
+      gap: var(--gap-sm);
+    }
+  }
+
+  .girlyf-feed__link {
+    display: block;
+    text-decoration: none;
+  }
+
+  .girlyf-feed__frame {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    aspect-ratio: var(--girlyf-feed-ratio, 1);
+    border-radius: var(--card-corner-radius, 4px);
+    background-color: var(--girlyf-cream);
+  }
+
+  .girlyf-feed__image {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  .girlyf-feed__image--empty svg {
+    inline-size: 100%;
+    block-size: 100%;
+    opacity: 0.35;
+  }
+
+  /* A whisper of Espresso on hover, so a linked tile answers the pointer. The
+     hover is not the only affordance — the tile is a link, and focus draws the
+     theme's own outline. */
+  .girlyf-feed__veil {
+    position: absolute;
+    inset: 0;
+    background-color: rgb(var(--color-foreground-rgb) / 0);
+    pointer-events: none;
+  }
+
+  @media (hover: hover) {
+    .girlyf-feed__veil {
+      transition: background-color var(--girlyf-hover-duration, 320ms) var(--girlyf-ease, ease);
+    }
+
+    .girlyf-feed__link:hover .girlyf-feed__veil,
+    .girlyf-feed__link:focus-visible .girlyf-feed__veil {
+      background-color: rgb(var(--color-foreground-rgb) / 0.12);
+    }
+  }
+
+  .girlyf-feed__footer {
+    display: flex;
+    justify-content: center;
+  }
+
+  .girlyf-feed__button {
+    font-family: var(--font-body--family);
+    font-size: var(--font-size--h5);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--color-foreground);
+    border: 1px solid var(--color-foreground);
+    border-radius: var(--button-border-radius-secondary, 14px);
+    padding: 0.9em 2.2em;
+    transition:
+      background-color var(--girlyf-hover-duration, 320ms) var(--girlyf-ease, ease),
+      color var(--girlyf-hover-duration, 320ms) var(--girlyf-ease, ease);
+  }
+
+  .girlyf-feed__button:hover,
+  .girlyf-feed__button:focus-visible {
+    background-color: var(--color-foreground);
+    color: var(--color-background);
+  }
+
+  .girlyf-feed__empty {
+    grid-column: 1 / -1;
+    color: var(--girlyf-cocoa);
+    font-family: var(--font-body--family);
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Girlyf Instagram",
+  "tag": "section",
+  "class": "section-wrapper",
+  "disabled_on": { "groups": ["header", "footer"] },
+  "max_blocks": 12,
+  "blocks": [{ "type": "_girlyf-instagram-tile" }],
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Upload the images rather than embedding the feed — an embed empties itself when a post is deleted or a token expires."
+    },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Follow" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "@girlyf.in" },
+    {
+      "type": "text",
+      "id": "description",
+      "label": "Description",
+      "default": "Styling, new arrivals and the pieces that sell out first."
+    },
+    {
+      "type": "url",
+      "id": "profile_url",
+      "label": "Profile link",
+      "info": "https://www.instagram.com/girlyf.in/ — a `url` setting takes no default in a schema, so it is set in the homepage template instead."
+    },
+    { "type": "text", "id": "button_label", "label": "Button", "default": "Follow on Instagram" },
+    { "type": "header", "content": "Layout" },
+    {
+      "type": "range",
+      "id": "columns",
+      "label": "Columns on desktop",
+      "min": 3,
+      "max": 6,
+      "step": 1,
+      "default": 4
+    },
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "label": "Shape",
+      "options": [
+        { "value": "1", "label": "Square" },
+        { "value": "4 / 5", "label": "Portrait" },
+        { "value": "9 / 16", "label": "Story" }
+      ],
+      "default": "4 / 5"
+    },
+    {
+      "type": "select",
+      "id": "section_width",
+      "label": "Width",
+      "options": [
+        { "value": "page-width", "label": "Page" },
+        { "value": "full-width", "label": "Full" }
+      ],
+      "default": "page-width"
+    },
+    { "type": "color", "id": "background_color", "label": "Background", "placeholder": "Default" },
+    { "type": "header", "content": "Padding" },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top",
+      "min": 0,
+      "max": 160,
+      "step": 4,
+      "unit": "px",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 160,
+      "step": 4,
+      "unit": "px",
+      "default": 80
+    }
+  ],
+  "presets": [
+    {
+      "name": "Girlyf Instagram",
+      "category": "Girlyf",
+      "blocks": {
+        "tile_1": { "type": "_girlyf-instagram-tile" },
+        "tile_2": { "type": "_girlyf-instagram-tile" },
+        "tile_3": { "type": "_girlyf-instagram-tile" },
+        "tile_4": { "type": "_girlyf-instagram-tile" }
+      },
+      "block_order": ["tile_1", "tile_2", "tile_3", "tile_4"]
+    }
+  ]
+}
+{% endschema %}

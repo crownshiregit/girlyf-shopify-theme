@@ -43,6 +43,14 @@
     {%- render 'theme-styles-variables' -%}
     {%- render 'color-palette' -%}
 
+    {%- comment -%}
+      Girlyf-authored. Must come after color-palette, which defines the
+      foreground and background tokens the Girlyf tokens sit beside. Rendered
+      here rather than per section so there is one observer and one set of
+      durations — see snippets/girlyf-motion.liquid.
+    {%- endcomment -%}
+    {%- render 'girlyf-motion' -%}
+
     {% if request.design_mode %}
       {%- render 'theme-editor' -%}
     {% endif %}

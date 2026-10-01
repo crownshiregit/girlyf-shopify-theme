@@ -1,0 +1,266 @@
+/*
+ * GIRLYF MOTION — the whole animation vocabulary, in one file.
+ *
+ * Every Girlyf-authored section animates by adding attributes, never by writing
+ * keyframes of its own. Four sections sharing one easing curve and one distance
+ * is what makes the page read as one object rather than four widgets.
+ *
+ * The tokens are emitted by `snippets/girlyf-motion.liquid`, because the gold
+ * accent has to come from `settings.color_palette` and a static file cannot read
+ * Liquid. This file consumes them and never invents a colour.
+ *
+ * THE FEEL: silk settling. Long, eased-out, no overshoot, no bounce. The
+ * photography is satin and pampas grass in slow natural light; a spring curve
+ * would fight it. Every duration here is deliberately slower than Horizon's UI
+ * speeds (`--animation-speed` is 125ms) — those are for controls, these are for
+ * arrivals.
+ *
+ * REDUCED MOTION: every rule that moves something is inside a
+ * `prefers-reduced-motion: no-preference` query. Nothing here has an opinion
+ * about what a reduced-motion visitor sees, which means they see the finished
+ * layout, immediately, with no fallback path to maintain.
+ */
+
+/* -------------------------------------------------------------------------
+ * 1. Reveal
+ *
+ * `data-girlyf-reveal` on anything that should arrive. The engine in
+ * `snippets/girlyf-motion.liquid` adds `data-girlyf-shown` when it crosses into
+ * view, once, and stops watching it.
+ *
+ * The hidden state is scoped to `[data-girlyf-motion]` on <html>, set by an
+ * inline script in <head>. So: no script, no hidden state — the page is simply
+ * finished. That is why the engine is inline and not an asset request that can
+ * fail and leave a page of invisible sections.
+ * ------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-girlyf-motion] [data-girlyf-reveal] {
+    opacity: 0;
+    transform: translate3d(0, var(--girlyf-reveal-rise), 0);
+    transition:
+      opacity var(--girlyf-reveal-duration) var(--girlyf-ease) var(--girlyf-reveal-delay, 0ms),
+      transform var(--girlyf-reveal-duration) var(--girlyf-ease) var(--girlyf-reveal-delay, 0ms);
+  }
+
+  /* Media settles rather than rises: a photograph easing off a slight
+     over-scale reads as the light finding it, which is the shoot's own mood. */
+  [data-girlyf-motion] [data-girlyf-reveal='media'] {
+    transform: none;
+    clip-path: inset(var(--girlyf-reveal-inset) round var(--girlyf-media-radius, 0));
+    transition:
+      opacity var(--girlyf-reveal-duration-slow) var(--girlyf-ease) var(--girlyf-reveal-delay, 0ms),
+      clip-path var(--girlyf-reveal-duration-slow) var(--girlyf-ease) var(--girlyf-reveal-delay, 0ms);
+  }
+
+  [data-girlyf-motion] [data-girlyf-reveal][data-girlyf-shown] {
+    opacity: 1;
+    transform: none;
+    clip-path: inset(0 round var(--girlyf-media-radius, 0));
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * 2. Line reveal
+ *
+ * For a display heading only. Each line is wrapped in a mask and slides up from
+ * under its own baseline — the effect the brand's serif is built for, and the
+ * reason it is restricted to `h1`/`h2`-scale type: at body size the masks are
+ * indistinguishable from a plain fade and cost a wrapper element each.
+ * ------------------------------------------------------------------------- */
+
+.girlyf-lines {
+  display: block;
+}
+
+.girlyf-lines__mask {
+  display: block;
+  overflow: hidden;
+  /* Bodoni's descenders sit below the em box; a flush mask clips the y and g. */
+  padding-block-end: 0.12em;
+  margin-block-end: -0.12em;
+}
+
+.girlyf-lines__line {
+  display: block;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-girlyf-motion] [data-girlyf-reveal='lines'] .girlyf-lines__line {
+    transform: translate3d(0, 110%, 0);
+    transition: transform var(--girlyf-reveal-duration-slow) var(--girlyf-ease)
+      calc(var(--girlyf-reveal-delay, 0ms) + var(--girlyf-line-index, 0) * var(--girlyf-stagger));
+  }
+
+  [data-girlyf-motion] [data-girlyf-reveal='lines'] {
+    /* The mask does the work; the block itself must not also fade, or the
+       lines arrive greyed. */
+    opacity: 1;
+    transform: none;
+  }
+
+  [data-girlyf-motion] [data-girlyf-reveal='lines'][data-girlyf-shown] .girlyf-lines__line {
+    transform: none;
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * 3. Parallax
+ *
+ * `data-girlyf-parallax` on the media element *inside* a revealed wrapper —
+ * never on the same element, because both write `transform` and the last one
+ * wins silently.
+ *
+ * The scale is what buys the travel: an image translated inside a fixed frame
+ * needs to be taller than the frame or it exposes an edge. `--girlyf-parallax`
+ * is written by `assets/girlyf-motion.js` and is 0 until it loads, so the
+ * un-enhanced state is a correctly-framed, slightly over-scaled photograph.
+ * ------------------------------------------------------------------------- */
+
+[data-girlyf-parallax] {
+  --girlyf-parallax: 0px;
+
+  transform: translate3d(0, var(--girlyf-parallax), 0) scale(var(--girlyf-parallax-scale, 1.14));
+  transform-origin: center;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-girlyf-parallax] {
+    --girlyf-parallax: 0px;
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * 4. Hover
+ *
+ * One curve for pointer response too, slower than a UI transition and faster
+ * than an arrival. Only on devices that actually hover — on touch these rules
+ * fire on tap and read as lag.
+ * ------------------------------------------------------------------------- */
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .girlyf-lift {
+    transition: transform var(--girlyf-hover-duration) var(--girlyf-ease);
+  }
+
+  .girlyf-lift:hover,
+  .girlyf-lift:focus-visible,
+  a:hover .girlyf-lift,
+  a:focus-visible .girlyf-lift {
+    transform: translate3d(0, calc(var(--girlyf-reveal-rise) * -0.25), 0);
+  }
+
+  .girlyf-zoom {
+    transition: transform var(--girlyf-hover-duration-slow) var(--girlyf-ease);
+  }
+
+  a:hover .girlyf-zoom,
+  a:focus-visible .girlyf-zoom,
+  .girlyf-zoom:hover {
+    transform: scale(1.05);
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * 5. Shared editorial furniture
+ *
+ * Used by all four Girlyf sections. Gold appears here and nowhere else in the
+ * theme's CSS, which is what keeps the guidelines' 10% law checkable: grep for
+ * `--girlyf-gold` and you have the whole accounting.
+ *
+ * Gold is a FILL and a MARK, never an ink — it measures 2.33:1 on Paper and
+ * fails large text. See docs/decisions/six-brand-roles-onto-four-horizon-slots.
+ * ------------------------------------------------------------------------- */
+
+.girlyf-eyebrow {
+  font-family: var(--font-body--family);
+  font-size: var(--font-size--h6);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  /* Cocoa: 7.98:1 on Paper. Subdued in weight, never in contrast. */
+  color: var(--girlyf-cocoa);
+  margin: 0;
+}
+
+/* The accent, as a rule the eye reads before the words. Decorative only —
+   it is never the sole carrier of a heading's meaning. */
+.girlyf-rule {
+  display: block;
+  block-size: 1px;
+  inline-size: var(--girlyf-rule-width, 3.5rem);
+  background: var(--girlyf-gold);
+  border: 0;
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-girlyf-motion] [data-girlyf-reveal] .girlyf-rule,
+  [data-girlyf-motion] .girlyf-rule[data-girlyf-reveal] {
+    transform-origin: left center;
+    scale: 0 1;
+    transition: scale var(--girlyf-reveal-duration-slow) var(--girlyf-ease)
+      calc(var(--girlyf-reveal-delay, 0ms) + var(--girlyf-stagger));
+  }
+
+  [data-girlyf-motion] [data-girlyf-reveal][data-girlyf-shown] .girlyf-rule,
+  [data-girlyf-motion] .girlyf-rule[data-girlyf-reveal][data-girlyf-shown] {
+    scale: 1 1;
+  }
+}
+
+.girlyf-heading {
+  font-family: var(--font-heading--family);
+  font-size: var(--font-size--h2);
+  line-height: var(--line-height--display-tight, 1.1);
+  color: var(--color-foreground);
+  margin: 0;
+  text-wrap: pretty;
+}
+
+.girlyf-body {
+  font-family: var(--font-body--family);
+  font-size: var(--font-size--paragraph);
+  line-height: var(--line-height--body-loose, 1.7);
+  color: var(--girlyf-cocoa);
+  max-inline-size: 46ch;
+  margin: 0;
+  text-wrap: pretty;
+}
+
+/* Cream on Paper is a 1.33 difference — a card with no border does not exist as
+   a shape. Cocoa at 20% is the lightest edge that still reads. */
+.girlyf-card-edge {
+  border: 1px solid rgb(var(--girlyf-cocoa-rgb) / 0.2);
+}
+
+/* -------------------------------------------------------------------------
+ * 6. Horizontal rails
+ *
+ * The reels strip and the mobile category tiles are the same object: a
+ * scroll-snapping rail that bleeds to the viewport edge so the next card is
+ * visibly cut off, which is the only reliable affordance that a rail scrolls.
+ * ------------------------------------------------------------------------- */
+
+.girlyf-rail {
+  display: flex;
+  gap: var(--girlyf-rail-gap, var(--gap-lg));
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  /* Bleed past the section's grid column to the page margin on both sides. */
+  margin-inline: calc(var(--util-page-margin-offset, 0px) * -1);
+  padding-inline: var(--util-page-margin-offset, 0px);
+  padding-block-end: var(--gap-xs);
+}
+
+.girlyf-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.girlyf-rail > * {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}

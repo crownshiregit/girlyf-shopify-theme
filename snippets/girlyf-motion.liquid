@@ -1,0 +1,143 @@
+{%- doc -%}
+  Girlyf motion — tokens, the reveal engine, and the enhancement module.
+
+  Rendered ONCE, from `layout/theme.liquid`. Not per section: four sections each
+  booting their own IntersectionObserver is four observers watching overlapping
+  sets of the same elements, and four chances for one of them to load late and
+  flash.
+
+  Emits, in order:
+
+  1. The Girlyf tokens. Cream, Cocoa and Gold live in `settings.color_palette`
+     slots that Horizon's own `color-palette.liquid` does not expose as CSS
+     variables — it only publishes `background` and `foreground`. So a Girlyf
+     section that wants the accent has exactly one place to get it, which is what
+     makes the guidelines' 10% law greppable.
+  2. `girlyf-motion.css`, which consumes them.
+  3. A `<noscript>` that un-hides everything.
+  4. The reveal engine, INLINE and synchronous.
+  5. `girlyf-motion.js`, deferred, for the enhancements that a page is fine
+     without.
+
+  Why 4 is inline: the engine owns the hidden state. An asset request that fails
+  — offline, blocked, a bad deploy — would leave a homepage of invisible
+  sections. Inline, the worst case is a page that has already finished.
+
+  @example
+  {%- render 'girlyf-motion' -%}
+{%- enddoc -%}
+
+{% liquid
+  assign cream = settings.color_palette.color1 | default: settings.color_palette.background
+  assign cocoa = settings.color_palette.color2 | default: settings.color_palette.foreground
+  assign gold = settings.color_palette.color3 | default: settings.color_palette.foreground
+%}
+
+{% style %}
+  :root {
+    /* The Girlyf accent. Gold is a fill and a mark, never an ink — 2.33:1 on
+       Paper. See docs/decisions/six-brand-roles-onto-four-horizon-slots.md. */
+    --girlyf-gold: {{ gold }};
+    --girlyf-gold-rgb: {{ gold.rgb }};
+    --girlyf-cream: {{ cream }};
+    --girlyf-cream-rgb: {{ cream.rgb }};
+    --girlyf-cocoa: {{ cocoa }};
+    --girlyf-cocoa-rgb: {{ cocoa.rgb }};
+
+    /* One curve for the whole site. Eased out, no overshoot: the brand's
+       photography is slow natural light on satin, and a spring fights it. */
+    --girlyf-ease: cubic-bezier(0.16, 0.84, 0.44, 1);
+    --girlyf-reveal-duration: 720ms;
+    --girlyf-reveal-duration-slow: 1100ms;
+    --girlyf-reveal-rise: 1.75rem;
+    --girlyf-reveal-inset: 12% 0 0;
+    --girlyf-stagger: 90ms;
+    --girlyf-hover-duration: 320ms;
+    --girlyf-hover-duration-slow: 900ms;
+  }
+{% endstyle %}
+
+{{ 'girlyf-motion.css' | asset_url | stylesheet_tag }}
+
+<noscript>
+  <style>
+    [data-girlyf-reveal] {
+      opacity: 1 !important;
+      transform: none !important;
+      clip-path: none !important;
+    }
+  </style>
+</noscript>
+
+<script>
+  /**
+   * The reveal engine. Inline because it owns whether content is visible.
+   *
+   * Adds `data-girlyf-motion` to <html>, which is the *only* thing that arms the
+   * hidden state in girlyf-motion.css. Two conditions unarm it entirely, and in
+   * both the visitor gets the finished layout with no animation code running:
+   *
+   *   - no IntersectionObserver — every element would stay hidden forever
+   *   - prefers-reduced-motion   — the CSS ignores us anyway, so don't observe
+   *
+   * Reveals are one-way. An element that has arrived is unobserved and never
+   * re-hidden: a section that re-animates every time it scrolls past is a
+   * distraction on the second pass and nausea on the tenth.
+   */
+  (function () {
+    var root = document.documentElement;
+
+    var still = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (!('IntersectionObserver' in window) || still.matches) return;
+
+    root.setAttribute('data-girlyf-motion', '');
+
+    /* A visitor who turns motion down mid-session should see the page finish,
+       not freeze half-revealed. */
+    still.addEventListener('change', function (event) {
+      if (event.matches) root.removeAttribute('data-girlyf-motion');
+    });
+
+    var observer = new IntersectionObserver(
+      function (entries) {
+        for (var i = 0; i < entries.length; i++) {
+          if (!entries[i].isIntersecting) continue;
+          entries[i].target.setAttribute('data-girlyf-shown', '');
+          observer.unobserve(entries[i].target);
+        }
+      },
+      {
+        /* Fire a little before the element's top edge clears the fold, so the
+           arrival is finishing as it settles into reading position rather than
+           starting there. */
+        rootMargin: '0px 0px -12% 0px',
+        threshold: 0.01,
+      }
+    );
+
+    function scan(within) {
+      var targets = (within || document).querySelectorAll('[data-girlyf-reveal]:not([data-girlyf-shown])');
+      for (var i = 0; i < targets.length; i++) observer.observe(targets[i]);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () {
+        scan();
+      });
+    } else {
+      scan();
+    }
+
+    /* The theme editor replaces a section's DOM in place, so its elements are
+       new and unobserved. Without this, editing a Girlyf section blanks it. */
+    document.addEventListener('shopify:section:load', function (event) {
+      scan(event.target);
+    });
+  })();
+</script>
+
+<script
+  src="{{ 'girlyf-motion.js' | asset_url }}"
+  type="module"
+  fetchpriority="low"
+></script>
