@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "description": "Girlyf storefront — Shopify theme, catalogue architecture and the fill sheet handed to the Girlyf team",
+  "_config": "THE store this repo targets. Changing it here changes it everywhere: the Admin-API write guard in scripts/shopify-data/client.mjs reads this, and the theme commands below interpolate it as $npm_package_config_store.",
+  "config": {
+    "store": "girlyf-dev.myshopify.com"
+  },
   "scripts": {
     "test": "node --test \"scripts/**/*.test.mjs\"",
     "check": "npm run check:liquid && npm test",
@@ -13,9 +17,13 @@
     "data:authorize": "node scripts/shopify-data/authorize.mjs",
     "data:plan": "node scripts/shopify-data/apply.mjs --dry-run",
     "data:apply": "node scripts/shopify-data/apply.mjs",
-    "dev": "shopify theme dev --store ffaznr-4y.myshopify.com --theme-editor-sync",
-    "pull": "shopify theme pull --store ffaznr-4y.myshopify.com --theme \"Girlyf — build\" --nodelete",
-    "push": "shopify theme push --store ffaznr-4y.myshopify.com --theme \"Girlyf — build\""
+    "files:plan": "node scripts/shopify-data/upload-theme-files.mjs --dry-run",
+    "files:upload": "node scripts/shopify-data/upload-theme-files.mjs",
+    "demo:plan": "node scripts/shopify-data/seed-demo.mjs --dry-run",
+    "demo:seed": "node scripts/shopify-data/seed-demo.mjs",
+    "dev": "shopify theme dev --store $npm_package_config_store --theme-editor-sync",
+    "pull": "shopify theme pull --store $npm_package_config_store --theme \"Girlyf — build\" --nodelete",
+    "push": "shopify theme push --store $npm_package_config_store --theme \"Girlyf — build\""
   },
   "engines": {
     "node": ">=22.12"

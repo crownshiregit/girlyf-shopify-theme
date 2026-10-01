@@ -1,0 +1,156 @@
+{
+  "_comment": [
+    "FIVE DEMO PRODUCTS FOR THE PRE-HANDOVER WALKTHROUGH. Not the launch catalogue.",
+    "",
+    "Every one is a real piece from `Girlyf Assets/`, with copy written against the",
+    "actual photograph. Titles carry a `Test ` prefix and every product carries the",
+    "`edit:demo` tag, so `npm run demo:seed -- --undo` can find and remove exactly",
+    "these and nothing else. Two guards, because the undo deletes products.",
+    "",
+    "TITLE, PRICE AND DESCRIPTION ARE MEANT TO BE EDITED. That is why they live in",
+    "this file rather than in seed-demo.mjs. Handles, tags, SKUs and the free_size",
+    "metafield are still DERIVED — same rules as the fill sheet, same code path, so",
+    "the demo cannot drift from the architecture it is demonstrating.",
+    "",
+    "WHY NO SIZED RING. A sized ring would demo the variant picker, but nothing in",
+    "the asset folder is photographed in S/M/L — both rings shot are visibly",
+    "open-backed. Inventing sizes for a piece that has none would put a wrong fact",
+    "in front of the client. The open ring demos the Free Size badge instead.",
+    "",
+    "WHY NO COMBO. A combo needs `combo_items` linked by hand in the admin, and a",
+    "combo whose pieces do not exist yet is a broken product page. Add one after",
+    "the real catalogue lands.",
+    "",
+    "Image paths are relative to the ASSETS FOLDER, which sits beside the repo and",
+    "is not checked in. Override its location with --assets <path>."
+  ],
+  "assets_folder": "../Girlyf Assets",
+  "demo_tag": "edit:demo",
+  "title_prefix": "Test ",
+  "products": [
+    {
+      "title": "Test Bow Pendant Necklace",
+      "weight_grams": 8,
+      "pack_size": "pouch",
+      "category": "necklaces",
+      "material": "gold-plated",
+      "price": "649",
+      "stock": 12,
+      "description": "A soft gold bow on a chain beaded at intervals, so the light catches it more than once. Sits just below the collarbone.",
+      "images": [
+        {
+          "file": "WhatsApp Image 2026-08-15 at 8.11.24 PM.jpeg",
+          "alt": "Gold bow pendant on a beaded chain, with matching bow studs behind it"
+        }
+      ]
+    },
+    {
+      "title": "Test Pearl Heart Necklace",
+      "weight_grams": 6,
+      "pack_size": "pouch",
+      "category": "necklaces",
+      "material": "gold-plated",
+      "material_2": "pearl",
+      "price": "549",
+      "stock": 15,
+      "description": "A small heart set with mother of pearl, on a chain fine enough to disappear. The piece you stop noticing you are wearing.",
+      "images": [
+        {
+          "file": "WhatsApp Image 2026-08-15 at 8.11.25 PM.jpeg",
+          "alt": "Gold heart pendant with a mother of pearl centre on a fine chain"
+        }
+      ]
+    },
+    {
+      "title": "Test Mother of Pearl Bangle",
+      "weight_grams": 22,
+      "pack_size": "bangle-box",
+      "category": "bracelets-bangles",
+      "material": "gold-plated",
+      "material_2": "pearl",
+      "price": "719",
+      "compare_at": "899",
+      "stock": 6,
+      "description": "A hinged bangle inlaid with mother of pearl and clasped with a line of tiny stones. Slips on, stays put.",
+      "images": [
+        {
+          "file": "WhatsApp Image 2026-08-15 at 8.52.02 PM.jpeg",
+          "alt": "Gold hinged bangle inlaid with mother of pearl panels"
+        },
+        {
+          "file": "WhatsApp Image 2026-08-15 at 8.52.03 PM.jpeg",
+          "alt": "The bangle in a velvet tray beside three others, with a mirror behind"
+        }
+      ]
+    },
+    {
+      "title": "Test Emerald Vine Bracelet",
+      "weight_grams": 14,
+      "pack_size": "small-box",
+      "category": "bracelets-bangles",
+      "material": "gold-plated",
+      "material_2": "stone",
+      "price": "899",
+      "stock": 8,
+      "description": "Green stones set along a gold vine, leaves and all. Formal enough for the wedding, light enough for the dinner afterwards.",
+      "images": [
+        {
+          "file": "WhatsApp Image 2026-08-15 at 8.11.27 PM.jpeg",
+          "alt": "Gold vine bracelet set with oval and marquise green stones"
+        }
+      ]
+    },
+    {
+      "title": "Test Wave Open Ring",
+      "weight_grams": 5,
+      "pack_size": "pouch",
+      "category": "rings",
+      "material": "gold-plated",
+      "size": "Free Size",
+      "price": "499",
+      "stock": 10,
+      "description": "A wide sculpted band that folds like water and leaves its back open, so it fits whichever finger you settle on.",
+      "images": [
+        {
+          "file": "WhatsApp Image 2026-08-15 at 8.11.26 PM (1).jpeg",
+          "alt": "Wide sculpted gold ring, open at the back, on a suede tray"
+        }
+      ]
+    },
+    {
+      "title": "Test Clover Studs",
+      "weight_grams": 4,
+      "pack_size": "pouch",
+      "category": "earrings",
+      "material": "gold-plated",
+      "material_2": "pearl",
+      "price": "399",
+      "stock": 20,
+      "description": "Four small petals of mother of pearl, edged in beaded gold. Light enough for a full day and quiet enough for every one of them.",
+      "images": [
+        {
+          "file": "WhatsApp Image 2026-08-15 at 8.52.03 PM (2).jpeg",
+          "alt": "Pair of gold clover studs set with mother of pearl on ivory satin"
+        }
+      ]
+    },
+    {
+      "title": "Test Ribbon Set",
+      "weight_grams": 14,
+      "pack_size": "large-box",
+      "category": "combo",
+      "material": "gold-plated",
+      "price": "899",
+      "compare_at": "1149",
+      "stock": 8,
+      "description": "The bow pendant and its matching studs, boxed together and made to be worn at once. One bow at the collarbone, two at the ears.",
+      "images": [
+        {
+          "file": "WhatsApp Image 2026-08-15 at 8.11.24 PM.jpeg",
+          "alt": "Gold bow pendant on a beaded chain with the matching bow studs behind it"
+        }
+      ],
+      "combo_contains": "test-bow-pendant-necklace"
+    }
+  ]
+}

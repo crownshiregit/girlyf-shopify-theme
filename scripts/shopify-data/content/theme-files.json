@@ -1,0 +1,61 @@
+{
+  "_comment": [
+    "Files the THEME references by name. `shopify://shop_images/<filename>` resolves",
+    "against Content -> Files, so the name on the right of `as` is a contract: change",
+    "it and the section renders a blank background with no error anywhere.",
+    "",
+    "Sources are relative to the assets folder beside the repo, except entries marked",
+    "`derived`, which are generated into .brand-tmp/ (gitignored) before upload.",
+    "",
+    "WHY THE SITE LOOKED HALF-BUILT: every one of these was referenced by",
+    "templates/index.json and none existed in the store. A missing image in Liquid is",
+    "silence, not an error."
+  ],
+
+  "images": [
+    { "as": "girlyf-home-hero.jpg",
+      "from": "WhatsApp Image 2026-08-15 at 8.52.02 PM (4).jpeg",
+      "alt": "A rose-gold vanity mirror beside a necklace bust and an open book, warm window light" },
+
+    { "as": "girlyf-home-story.jpg",
+      "from": "WhatsApp Image 2026-08-15 at 8.52.03 PM.jpeg",
+      "alt": "Four gold bangles in a velvet tray beside a mirror and a necklace bust" },
+
+    { "as": "girlyf-feed-1.jpg",
+      "from": "WhatsApp Image 2026-08-15 at 8.52.01 PM.jpeg",
+      "alt": "A small gold pendant resting on the pages of an open book" },
+
+    { "as": "girlyf-feed-2.jpg",
+      "from": "WhatsApp Image 2026-08-15 at 8.52.02 PM (1).jpeg",
+      "alt": "Five gold chains laid across an open book on ivory satin" },
+
+    { "as": "girlyf-feed-3.jpg",
+      "from": "WhatsApp Image 2026-08-15 at 8.11.23 PM.jpeg",
+      "alt": "A gold bangle resting on a white shell dish beside dried pampas" },
+
+    { "as": "girlyf-feed-4.jpg",
+      "from": "WhatsApp Image 2026-08-15 at 8.11.26 PM (2).jpeg",
+      "alt": "A gold bracelet set with coloured stones held across an open hand" },
+
+    { "as": "girlyf-logo-badge.png",
+      "derived": ".brand-tmp/girlyf-logo-badge.png",
+      "alt": "Girlyf badge: cream circle with the wordmark and Adorn Your Elegance Always" }
+  ],
+
+  "_reels_comment": [
+    "The reels strip reads custom.reels on each product. With none set, the section",
+    "renders nothing at all, which is why Shop the look was missing entirely rather",
+    "than appearing empty.",
+    "",
+    "Delivery spec from the guidelines: MP4/H.264, under 8MB, NO AUDIO TRACK, poster",
+    "frame. These are the received WhatsApp clips, used as-is for the demo."
+  ],
+
+  "reels": [
+    { "as": "girlyf-reel-1.mp4", "from": "WhatsApp Video 2026-08-15 at 8.11.29 PM.mp4", "product": "test-bow-pendant-necklace" },
+    { "as": "girlyf-reel-2.mp4", "from": "WhatsApp Video 2026-08-15 at 8.11.30 PM.mp4", "product": "test-pearl-heart-necklace" },
+    { "as": "girlyf-reel-3.mp4", "from": "WhatsApp Video 2026-08-15 at 8.11.31 PM.mp4", "product": "test-mother-of-pearl-bangle" },
+    { "as": "girlyf-reel-4.mp4", "from": "WhatsApp Video 2026-08-15 at 8.11.31 PM (1).mp4", "product": "test-emerald-vine-bracelet" },
+    { "as": "girlyf-reel-5.mp4", "from": "WhatsApp Video 2026-08-15 at 8.11.32 PM.mp4", "product": "test-wave-open-ring" }
+  ]
+}
