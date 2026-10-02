@@ -116,6 +116,19 @@ for (const p of without) {
   step(`${p.handle.padEnd(30)}  no folder named "${p.name}"`);
 }
 
+// A folder nobody claimed is almost always a typo in a name, and its
+// photographs would otherwise be dropped without a word.
+const claimed = new Set(products.map((p) => p.folder).filter(Boolean));
+const orphans = folders.filter((f) => !claimed.has(f));
+if (orphans.length) {
+  log(`\nFolders with no product in the sheet (${orphans.length}):`);
+  for (const f of orphans) {
+    const count = readdirSync(join(PHOTOS, f)).filter((x) => IMAGE.test(x)).length;
+    step(`${f.padEnd(40)} ${count} photo(s) will be IGNORED`);
+  }
+  log('Either the folder is misspelt, or the product is missing from the sheet.');
+}
+
 const total = withPhotos.reduce((n, p) => n + p.files.length, 0);
 
 // Competitors run on one or two photographs per product; five is above the norm
