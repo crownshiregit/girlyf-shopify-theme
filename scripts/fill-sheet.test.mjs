@@ -9,12 +9,15 @@ const TEMPLATE = 'sheet/girlyf-fill-sheet-template.csv';
 const sheet = (rows) => {
   const columns = [
     'Product Name', 'Category', 'Material', 'Material 2', 'Size',
-    'Price', 'Compare At', 'Stock', 'Description', 'Combo Contains', 'Status',
+    'Price', 'Compare At', 'Stock', 'Weight (g)', 'Pack Size', 'Specs',
+    'Description', 'Photos', 'Combo Contains', 'Status',
   ];
   const base = {
     'Product Name': 'Test Piece', Category: 'necklaces', Material: 'gold-plated',
     'Material 2': '', Size: '', Price: '499', 'Compare At': '', Stock: '5',
-    Description: 'A piece.', 'Combo Contains': '', Status: 'Active',
+    'Weight (g)': '8', 'Pack Size': 'pouch', Specs: '18k-gold-plated',
+    Description: 'A piece.', Photos: 'girlyf-necklaces-test-1.jpg',
+    'Combo Contains': '', Status: 'Active',
   };
   return parseCsv(toCsv(columns, rows.map((r) => ({ ...base, ...r })))).records;
 };
@@ -52,36 +55,62 @@ test('the template produces one product per name, three variants for the ring', 
   assert.equal(ring[0]['Option1 Name'], 'Size');
   assert.equal(ring[0].Title, 'Clover Stacking Ring');
   assert.equal(ring[1].Title, '', 'continuation rows carry no title');
-  assert.equal(ring[1].Tags, '', 'continuation rows carry no tags');
+  assert.equal(ring[1]['Metafield: custom.category [single_line_text_field]'], '', 'continuation rows carry no product fields');
 });
 
-// --- tags ------------------------------------------------------------------
+// --- category and material are metafields, not tags -------------------------
 
-test('every emitted tag is namespaced', () => {
+test('no Tags column is emitted at all', () => {
   const { records } = parseCsv(readFileSync(TEMPLATE, 'utf8'));
   for (const row of toShopifyRows(records)) {
-    if (!row.Tags) continue;
-    for (const tag of row.Tags.split(', ')) {
-      assert.match(tag, /^(category:|material:|edit:)|^combo$/, `bare tag emitted: "${tag}"`);
-    }
+    assert.equal('Tags' in row, false, 'a Tags column reappeared');
   }
 });
 
-test('a combo gets the combo tag and no category tag', () => {
+test('a combo carries combo as its category, not a separate mark', () => {
   const rows = toShopifyRows(sheet([
     { 'Product Name': 'Duo Box', Category: 'combo', 'Compare At': '899',
       'Combo Contains': 'geo-lariat-necklace, heart-charm-necklace' },
   ]));
-  assert.equal(rows[0].Tags, 'combo, material:gold-plated');
-  assert.doesNotMatch(rows[0].Tags, /category:/);
+  assert.equal(rows[0]['Metafield: custom.category [single_line_text_field]'], 'combo');
 });
 
-test('a second material adds a second tag; a duplicate one does not', () => {
+test('a second material is a second list entry; a duplicate one is not', () => {
   const [both] = toShopifyRows(sheet([{ Material: 'gold-plated', 'Material 2': 'pearl' }]));
-  assert.equal(both.Tags, 'category:necklaces, material:gold-plated, material:pearl');
+  assert.deepEqual(JSON.parse(both['Metafield: custom.material [list.single_line_text_field]']), ['gold-plated', 'pearl']);
 
   const [same] = toShopifyRows(sheet([{ Material: 'pearl', 'Material 2': 'pearl' }]));
-  assert.equal(same.Tags, 'category:necklaces, material:pearl');
+  assert.deepEqual(JSON.parse(same['Metafield: custom.material [list.single_line_text_field]']), ['pearl']);
+});
+
+// --- photographs ------------------------------------------------------------
+
+test('each photo gets its own row, and only the first repeats the variant', () => {
+  const rows = toShopifyRows(
+    sheet([{ Photos: 'a.jpg, b.jpg, c.jpg' }]),
+    { cdnPrefix: 'https://cdn.example/files/' },
+  );
+  assert.equal(rows.length, 3, 'three photos, three rows');
+  assert.deepEqual(rows.map((r) => r['Image Position']), ['1', '2', '3']);
+  assert.equal(rows[0]['Image Src'], 'https://cdn.example/files/a.jpg');
+  assert.equal(rows[0]['Variant SKU'] !== '', true);
+  assert.equal(rows[1]['Variant SKU'], '', 'an extra photo must not restate the variant');
+});
+
+test('a sized ring shares its photography across its size rows', () => {
+  const rows = toShopifyRows(sheet([
+    { 'Product Name': 'Band', Category: 'rings', Size: 'S', Photos: 'one.jpg' },
+    { 'Product Name': 'Band', Category: 'rings', Size: 'M', Photos: '' },
+    { 'Product Name': 'Band', Category: 'rings', Size: 'L', Photos: '' },
+  ]));
+  assert.equal(rows.length, 3, 'three sizes, one photo, still three rows');
+  assert.equal(rows[0]['Image Position'], '1');
+  assert.equal(rows[1]['Image Src'], '', 'the photo is not repeated per size');
+});
+
+test('a filename with spaces is sanitised the way Shopify stores it', () => {
+  const [row] = toShopifyRows(sheet([{ Photos: 'my photo.jpeg' }]), { cdnPrefix: 'x/' });
+  assert.equal(row['Image Src'], 'x/my_photo.jpg');
 });
 
 // --- free size -------------------------------------------------------------

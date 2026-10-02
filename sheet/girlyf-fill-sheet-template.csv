@@ -1,9 +1,9 @@
-Product Name,Category,Material,Material 2,Size,Price,Compare At,Stock,Description,Combo Contains,Status
-Geo Lariat Necklace,necklaces,gold-plated,,,649,,12,"A single fine chain that falls to a soft point at the collarbone. Wear it alone for the quiet version, or layered under a shorter chain.",,Active
-Heart Charm Necklace,necklaces,gold-plated,,,549,,15,"One small heart on a delicate chain. The piece you stop noticing you are wearing, which is rather the point.",,Active
-Clover Studs,earrings,gold-plated,,,399,,20,"Four small petals, close to the ear. Light enough for a full day and quiet enough for every one of them.",,Active
-Mother of Pearl Cuff,bracelets-bangles,gold-plated,pearl,,719,899,6,"A slim open cuff set with mother of pearl, catching whatever light is going. Slips on, stays put.",,Active
-Clover Stacking Ring,rings,gold-plated,,S,449,,6,"A fine band with a single clover, made to sit beside others. Stack two, or three, or wear the one.",,Draft
-Clover Stacking Ring,rings,gold-plated,,M,449,,6,"A fine band with a single clover, made to sit beside others. Stack two, or three, or wear the one.",,Draft
-Clover Stacking Ring,rings,gold-plated,,L,449,,6,"A fine band with a single clover, made to sit beside others. Stack two, or three, or wear the one.",,Draft
-The Layering Combo,combo,gold-plated,,,1050,1198,8,"The Geo Lariat and the Heart Charm, boxed together and made to be worn at once. Two lengths, one look.","geo-lariat-necklace,heart-charm-necklace",Active
+Product Name,Category,Material,Material 2,Size,Price,Compare At,Stock,Weight (g),Pack Size,Specs,Description,Photos,Combo Contains,Status
+Geo Lariat Necklace,necklaces,gold-plated,,,649,,12,8,pouch,"18k-gold-plated,tarnish-free,hypoallergenic","A single fine chain that falls to a soft point at the collarbone. Wear it alone for the quiet version, or layered under a shorter chain.","girlyf-necklaces-geo-lariat-1.jpg,girlyf-necklaces-geo-lariat-2.jpg",,Active
+Heart Charm Necklace,necklaces,gold-plated,,,549,,15,6,pouch,"18k-gold-plated,tarnish-free,lightweight","One small heart on a delicate chain. The piece you stop noticing you are wearing, which is rather the point.",girlyf-necklaces-heart-charm-1.jpg,,Active
+Clover Studs,earrings,gold-plated,pearl,,399,,20,4,pouch,"18k-gold-plated,tarnish-free,nickel-free,lightweight","Four small petals, close to the ear. Light enough for a full day and quiet enough for every one of them.",girlyf-earrings-clover-studs-1.jpg,,Active
+Mother of Pearl Cuff,bracelets-bangles,gold-plated,pearl,,719,899,6,22,bangle-box,"18k-gold-plated,stainless-steel,tarnish-free,water-resistant","A slim open cuff set with mother of pearl, catching whatever light is going. Slips on, stays put.","girlyf-bracelets-bangles-mop-cuff-1.jpg,girlyf-bracelets-bangles-mop-cuff-2.jpg",,Active
+Clover Stacking Ring,rings,gold-plated,,S,449,,6,3,pouch,"18k-gold-plated,tarnish-free,nickel-free","A fine band with a single clover, made to sit beside others. Stack two, or three, or wear the one.",girlyf-rings-clover-stacking-1.jpg,,Draft
+Clover Stacking Ring,rings,gold-plated,,M,449,,6,3,pouch,"18k-gold-plated,tarnish-free,nickel-free","A fine band with a single clover, made to sit beside others. Stack two, or three, or wear the one.",,,Draft
+Clover Stacking Ring,rings,gold-plated,,L,449,,6,3,pouch,"18k-gold-plated,tarnish-free,nickel-free","A fine band with a single clover, made to sit beside others. Stack two, or three, or wear the one.",,,Draft
+The Layering Combo,combo,gold-plated,,,1050,1198,8,14,large-box,"18k-gold-plated,tarnish-free","The Geo Lariat and the Heart Charm, boxed together and made to be worn at once. Two lengths, one look.",girlyf-combo-layering-1.jpg,"geo-lariat-necklace,heart-charm-necklace",Active

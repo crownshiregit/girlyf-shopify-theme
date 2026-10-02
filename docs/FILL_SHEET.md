@@ -28,7 +28,7 @@ it is a bulk selection over products that already exist, it is an admin job.
 
 ## 2. Columns
 
-**Eleven columns, all of them typed or picked.** There are no formula columns —
+**Fifteen columns, all of them typed or picked.** There are no formula columns —
 handles, tags and SKUs are derived by the converter, not by the sheet. A filler
 cannot break a formula that isn't there, and the derivation rules live in code
 where they can be tested.
@@ -45,14 +45,46 @@ where they can be tested.
 | `Stock` | number | yes | Per row — so per size, on a sized ring |
 | `Description` | text | yes | Brand tone. Warm, elegant, short. Not a spec sheet |
 | `Combo Contains` | text | combos only | The handles of the pieces inside, comma separated |
+| `Weight (g)` | number | yes | Grams, piece plus box. The courier bills on this |
+| `Pack Size` | dropdown | yes | `pouch` · `small-box` · `bangle-box` · `large-box` |
+| `Specs` | multi-pick | yes | The trust facts, comma separated. See below |
+| `Photos` | text | yes if Active | File names, comma separated, in the order they should show |
 | `Status` | dropdown | yes | `Draft` · `Active`. Defaults to `Draft` |
+
+### The two lists in one cell
+
+`Specs` and `Photos` each hold several values in one cell, comma separated.
+
+`Specs` is the trust block every competitor leads with, and the vocabulary is
+fixed: `18k-gold-plated` · `tarnish-free` · `water-resistant` · `hypoallergenic`
+· `nickel-free` · `stainless-steel` · `lightweight` · `adjustable`. Tick only
+what is true. A shopper reads these as fact.
+
+The description stays **prose**. The specs are a separate field precisely so the
+warm sentence is not turned into a spec sheet.
+
+### Photographs: file names, never URLs
+
+Photos are bulk-uploaded once to **Content → Files** in the Shopify admin, and
+the sheet holds only the file name. The converter builds the URL, because
+Shopify keeps the file name and serves it from a prefix fixed per store.
+
+So there is no CDN to sign up for and no link to paste. Name files
+`girlyf-[category]-[product]-[n].jpg`: lower case, hyphens, no spaces, `.jpg`,
+because Shopify rewrites anything else and the derived URL would then miss.
+
+A product with three photos is **three rows** in the exported CSV, which is
+Shopify's own format. Nobody filling the sheet sees that.
 
 ### Derived by the converter, never typed
 
 | Derived | From | Shape |
 |---|---|---|
 | `Handle` | `Product Name`, slugified | `geo-lariat-necklace` |
-| `Tags` | `Category` + `Material` | `category:necklaces, material:gold-plated` |
+| `Image Src` | `Photos` + the store's Files prefix | `https://cdn.shopify.com/.../girlyf-necklaces-geo-lariat-1.jpg` |
+| `category` metafield | `Category` | `necklaces` |
+| `material` metafield | `Material` + `Material 2` | `["gold-plated","pearl"]` |
+| `specs` metafield | `Specs` | `["18k-gold-plated","tarnish-free"]` |
 | `SKU` | category + handle + size | `GF-NEC-GEO-LARIAT-NECKLACE-FS` |
 | `free_size` metafield | `Size` = `Free Size` | boolean |
 | Variant rows | one per `Size` row sharing a name | Shopify's multi-row format |
@@ -122,6 +154,7 @@ product genuinely out of stock is `0`.
 | Category tile clips | Shopify admin, on the collection |
 | `combo_items` links | Shopify admin, once per combo |
 | Seasonal and campaign tags (`edit:*`) | Shopify admin, bulk tag editor |
+| The photographs themselves | Shopify admin, Content → Files, bulk drag |
 | New categories | The brand guidelines |
 | Discounts, COD rules, shipping | Shopify admin |
 

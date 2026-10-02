@@ -26,6 +26,20 @@ export const CATEGORIES = {
 
 export const MATERIALS = ['gold-plated', 'oxidised', 'pearl', 'stone'];
 
+/**
+ * The trust facts, ticked per product and rendered as a list under the prose.
+ * Every competitor in this market leads with these; the brand guidelines ask for
+ * warm prose instead. A shopper wants both, so the description stays prose and
+ * the claims live here, in a vocabulary nobody can retype three different ways.
+ */
+export const SPECS = [
+  '18k-gold-plated', 'tarnish-free', 'water-resistant', 'hypoallergenic',
+  'nickel-free', 'stainless-steel', 'lightweight', 'adjustable',
+];
+
+/** Which box a piece ships in. The weight itself is Shopify's own field. */
+export const PACK_SIZES = ['pouch', 'small-box', 'bangle-box', 'large-box'];
+
 /** Rings are the only category with a size axis. */
 export const SIZED_CATEGORY = 'rings';
 export const NUMBERED_SIZES = ['S', 'M', 'L'];
@@ -38,13 +52,21 @@ export const FREE_SIZE = 'Free Size';
 export const COMBO = 'combo';
 export const VENDOR = 'Girlyf';
 
+/**
+ * Shopify's product-import columns, in its own order.
+ *
+ * NO `Tags` COLUMN. Category and material used to be namespaced tags; they are
+ * metafields now, because the admin offers tag autocomplete rather than a fixed
+ * list and a mistyped `category:` tag imports cleanly into no collection at all.
+ * `edit:*` campaign tags are still a thing, but they are set in the admin in
+ * bulk, never here. See decisions/category-is-a-locked-choice-metafield.
+ */
 export const SHOPIFY_COLUMNS = [
   'Handle',
   'Title',
   'Body (HTML)',
   'Vendor',
   'Type',
-  'Tags',
   'Published',
   'Option1 Name',
   'Option1 Value',
@@ -57,9 +79,27 @@ export const SHOPIFY_COLUMNS = [
   'Variant Compare At Price',
   'Variant Requires Shipping',
   'Variant Taxable',
+  'Variant Grams',
+  'Image Src',
+  'Image Position',
+  'Image Alt Text',
   'Status',
+  'Metafield: custom.category [single_line_text_field]',
+  'Metafield: custom.material [list.single_line_text_field]',
+  'Metafield: custom.specs [list.single_line_text_field]',
+  'Metafield: custom.pack_size [single_line_text_field]',
   'Metafield: custom.free_size [boolean]',
 ];
+
+/**
+ * Shopify sanitises an uploaded filename and then serves it from a per-store
+ * prefix, so a Files URL is derivable from the filename alone — `?v=` is
+ * optional, verified against this store. That is what lets the sheet hold a
+ * plain filename instead of a 120-character URL, and why no third-party CDN is
+ * involved: Shopify re-hosts whatever `Image Src` points at anyway.
+ */
+export const sanitiseFilename = (name) =>
+  name.trim().replace(/\s+/g, '_').replace(/\.jpeg$/i, '.jpg');
 
 export const slugify = (name) =>
   name
@@ -67,6 +107,10 @@ export const slugify = (name) =>
     .normalize('NFKD')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
+
+/** One cell holding several values: trim, drop blanks, keep the typed order. */
+export const splitList = (value) =>
+  String(value || '').split(',').map((v) => v.trim()).filter(Boolean);
 
 const isPositiveNumber = (v) => /^\d+(\.\d+)?$/.test(v) && Number(v) > 0;
 const isNonNegativeInteger = (v) => /^\d+$/.test(v) && Number(v) >= 0;
@@ -169,6 +213,45 @@ export const validate = (records) => {
       errors.push(at(row, 'Stock', `"${row.Stock}" is not a whole number of items.`));
     }
 
+    // --- shipping ---------------------------------------------------------
+    // A courier bills on weight. A blank one is not a small parcel, it is an
+    // unanswered question that becomes a wrong shipping rate.
+    if (!row['Weight (g)']) {
+      errors.push(at(row, 'Weight (g)', 'Required, and blank. Grams, of the piece plus its box.'));
+    } else if (!isNonNegativeInteger(row['Weight (g)']) || Number(row['Weight (g)']) === 0) {
+      errors.push(at(row, 'Weight (g)', `"${row['Weight (g)']}" is not a whole number of grams.`));
+    }
+
+    if (!row['Pack Size']) {
+      errors.push(at(row, 'Pack Size', 'Required, and blank. Pick the box it ships in.'));
+    } else if (!PACK_SIZES.includes(row['Pack Size'])) {
+      errors.push(at(row, 'Pack Size', `"${row['Pack Size']}" is not one of: ${PACK_SIZES.join(', ')}.`));
+    }
+
+    // --- specs ------------------------------------------------------------
+    // These are claims a shopper reads as fact, so an unknown one is an error
+    // rather than something to quietly drop.
+    for (const spec of splitList(row.Specs)) {
+      if (!SPECS.includes(spec)) {
+        errors.push(at(row, 'Specs', `"${spec}" is not one of: ${SPECS.join(', ')}.`));
+      }
+    }
+    if (!splitList(row.Specs).length) {
+      warnings.push(at(row, 'Specs', 'No specs ticked. Competitors lead with these; a blank list loses the trust copy.'));
+    }
+
+    // --- photos -----------------------------------------------------------
+    for (const photo of splitList(row.Photos)) {
+      if (/[\\/]/.test(photo)) {
+        errors.push(at(row, 'Photos', `"${photo}" looks like a path. Use the file name only.`));
+      } else if (!/\.(jpg|jpeg|png|webp)$/i.test(photo)) {
+        errors.push(at(row, 'Photos', `"${photo}" has no image extension.`));
+      }
+    }
+    if (!splitList(row.Photos).length && row.Status === 'Active') {
+      errors.push(at(row, 'Photos', 'An Active product needs photographs. Leave it Draft until it has them.'));
+    }
+
     // --- description, status ---------------------------------------------
     if (!row.Description) errors.push(at(row, 'Description', 'Required, and blank.'));
     if (!['Draft', 'Active'].includes(row.Status)) {
@@ -228,15 +311,22 @@ export const validate = (records) => {
   return { errors, warnings };
 };
 
-/** Build the namespaced tag list for a row. */
-const tagsFor = (row) => {
-  const tags = row.Category === COMBO ? ['combo'] : [`category:${row.Category}`];
-  tags.push(`material:${row.Material}`);
-  if (row['Material 2'] && row['Material 2'] !== row.Material) {
-    tags.push(`material:${row['Material 2']}`);
-  }
-  return tags.join(', ');
+/** Materials as the metafield's JSON list. One, or two when genuinely both. */
+/** The description is prose. The trust facts are a metafield, not more copy. */
+const bodyFor = (row) => `<p>${row.Description}</p>`;
+
+const materialsFor = (row) => {
+  const list = [row.Material];
+  if (row['Material 2'] && row['Material 2'] !== row.Material) list.push(row['Material 2']);
+  return JSON.stringify(list);
 };
+
+/** Specs are typed comma-separated in one cell; the metafield wants a JSON list. */
+const specsFor = (row) =>
+  JSON.stringify(splitList(row.Specs));
+
+/** Photos are filenames, comma-separated, in sheet order. */
+const photosFor = (row) => splitList(row.Photos).map(sanitiseFilename);
 
 const skuFor = (row, handle) => {
   const prefix = row.Category === COMBO ? 'CMB' : CATEGORIES[row.Category].sku;
@@ -247,10 +337,21 @@ const skuFor = (row, handle) => {
 
 /**
  * Convert validated records into Shopify import rows.
- * Rows sharing a Product Name become one product; only the first row of a
- * product carries its title, body and tags, which is Shopify's own format.
+ *
+ * Shopify's CSV says a product is every consecutive row sharing a Handle, and
+ * it reads TWO independent lists down those rows: variants and images. They are
+ * not the same length, so a product needs max(variants, images) rows, with each
+ * list filled from the top and the rest of the cells blank. A ring in three
+ * sizes with one photo is three rows; a necklace with four photos is four.
+ *
+ * Only the first row carries the product's own fields. Repeat a title on a
+ * continuation row and Shopify makes a second product.
+ *
+ * `cdnPrefix` turns a filename in the sheet into a Files URL. Omit it and the
+ * Image Src column comes out empty, which imports fine and leaves the media to
+ * be dragged in by hand.
  */
-export const toShopifyRows = (records) => {
+export const toShopifyRows = (records, { cdnPrefix = '' } = {}) => {
   const byHandle = new Map();
   for (const row of records) {
     const handle = slugify(row['Product Name']);
@@ -265,40 +366,58 @@ export const toShopifyRows = (records) => {
     const sized = rows.some((r) => NUMBERED_SIZES.includes(r.Size));
     const freeSize = lead.Size === FREE_SIZE;
 
-    rows.forEach((row, index) => {
+    // Photos are a property of the product, not of a size, so they are read
+    // from the lead row only. Three sizes of one ring share its photography.
+    const photos = photosFor(lead);
+    const span = Math.max(rows.length, photos.length);
+
+    for (let index = 0; index < span; index += 1) {
+      const row = rows[index];
+      const photo = photos[index];
       const first = index === 0;
+
       out.push({
         Handle: handle,
-        Title: first ? row['Product Name'] : '',
-        'Body (HTML)': first ? `<p>${row.Description}</p>` : '',
+        Title: first ? lead['Product Name'] : '',
+        'Body (HTML)': first ? bodyFor(lead) : '',
         Vendor: first ? VENDOR : '',
-        Type: first ? (row.Category === COMBO ? 'Combo' : CATEGORIES[row.Category].title) : '',
-        Tags: first ? tagsFor(row) : '',
-        Published: first ? (row.Status === 'Active' ? 'TRUE' : 'FALSE') : '',
+        Type: first ? (lead.Category === COMBO ? 'Combo' : CATEGORIES[lead.Category].title) : '',
+        Published: first ? (lead.Status === 'Active' ? 'TRUE' : 'FALSE') : '',
 
-        // Single-variant products still get the variant-shaped columns, using
-        // Shopify's own Title / Default Title convention — so adding a second
-        // axis later means allowing extra rows, not reshaping the export.
-        'Option1 Name': sized ? 'Size' : 'Title',
-        'Option1 Value': sized ? row.Size : 'Default Title',
+        // Variant columns stop when the variants do. A fourth photo on a
+        // single-variant product must not restate the variant, or Shopify
+        // reads it as a second one.
+        'Option1 Name': row ? (sized ? 'Size' : 'Title') : '',
+        'Option1 Value': row ? (sized ? row.Size : 'Default Title') : '',
+        'Variant SKU': row ? skuFor(row, handle) : '',
+        'Variant Inventory Tracker': row ? 'shopify' : '',
+        'Variant Inventory Qty': row ? row.Stock : '',
+        'Variant Inventory Policy': row ? 'deny' : '',
+        'Variant Fulfillment Service': row ? 'manual' : '',
+        'Variant Price': row ? row.Price : '',
+        'Variant Compare At Price': row ? row['Compare At'] || '' : '',
+        'Variant Requires Shipping': row ? 'TRUE' : '',
+        'Variant Taxable': row ? 'TRUE' : '',
+        'Variant Grams': row ? lead['Weight (g)'] || '' : '',
 
-        'Variant SKU': skuFor(row, handle),
-        'Variant Inventory Tracker': 'shopify',
-        'Variant Inventory Qty': row.Stock,
-        'Variant Inventory Policy': 'deny',
-        'Variant Fulfillment Service': 'manual',
-        'Variant Price': row.Price,
-        'Variant Compare At Price': row['Compare At'] || '',
-        'Variant Requires Shipping': 'TRUE',
-        'Variant Taxable': 'TRUE',
-        Status: first ? row.Status.toLowerCase() : '',
+        // Image columns stop when the photos do.
+        'Image Src': photo ? `${cdnPrefix}${photo}` : '',
+        'Image Position': photo ? String(index + 1) : '',
+        'Image Alt Text': photo ? lead['Product Name'] : '',
+
+        Status: first ? lead.Status.toLowerCase() : '',
+
+        'Metafield: custom.category [single_line_text_field]': first ? lead.Category : '',
+        'Metafield: custom.material [list.single_line_text_field]': first ? materialsFor(lead) : '',
+        'Metafield: custom.specs [list.single_line_text_field]': first ? specsFor(lead) : '',
+        'Metafield: custom.pack_size [single_line_text_field]': first ? lead['Pack Size'] || '' : '',
 
         // Only rings answer this question at all.
-        'Metafield: custom.free_size [boolean]': first && row.Category === SIZED_CATEGORY
+        'Metafield: custom.free_size [boolean]': first && lead.Category === SIZED_CATEGORY
           ? freeSize ? 'true' : 'false'
           : '',
       });
-    });
+    }
   }
 
   return out;

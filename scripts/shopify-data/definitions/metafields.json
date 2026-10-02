@@ -24,7 +24,6 @@
     "absent here is left alone. Changing a type after products reference it is a",
     "migration, not an edit — see decisions/three-kinds-of-product-video.md."
   ],
-
   "definitions": [
     {
       "name": "Category",
@@ -33,7 +32,11 @@
       "ownerType": "PRODUCT",
       "type": "single_line_text_field",
       "pin": true,
-      "capabilities": { "smartCollectionCondition": { "enabled": true } },
+      "capabilities": {
+        "smartCollectionCondition": {
+          "enabled": true
+        }
+      },
       "description": "What this piece IS. Pick one. This is what puts the product on its category page — get it wrong and the product appears nowhere. Choose 'combo' for a boxed set of several pieces.",
       "validations": [
         {
@@ -51,12 +54,36 @@
       "ownerType": "PRODUCT",
       "type": "list.single_line_text_field",
       "pin": true,
-      "capabilities": { "smartCollectionCondition": { "enabled": true } },
+      "capabilities": {
+        "smartCollectionCondition": {
+          "enabled": true
+        }
+      },
       "description": "What it is made of. Pick one, or two for pieces that are genuinely both. Drives the storefront filters.",
       "validations": [
-        { "name": "choices", "value": "[\"gold-plated\",\"oxidised\",\"pearl\",\"stone\"]" }
+        {
+          "name": "choices",
+          "value": "[\"gold-plated\",\"oxidised\",\"pearl\",\"stone\"]"
+        }
       ],
       "_why": "Same locked vocabulary as category, one stakes lower — a wrong material loses a filter match rather than a whole category page. A list type because a piece can honestly be two materials."
+    },
+    {
+      "name": "Specs",
+      "namespace": "custom",
+      "key": "specs",
+      "ownerType": "PRODUCT",
+      "type": "list.single_line_text_field",
+      "pin": true,
+      "description": "The trust facts, as a tick list under the description. Pick every one that is true. These are claims, so only tick what the piece actually is.",
+      "validations": [
+        {
+          "name": "choices",
+          "value": "[\"18k-gold-plated\", \"tarnish-free\", \"water-resistant\", \"hypoallergenic\", \"nickel-free\", \"stainless-steel\", \"lightweight\", \"adjustable\"]"
+        }
+      ],
+      "_why": "Every competitor leads with these: The Beige's product body is literally '18k gold plated / Stainless Steel / Water-resistant / Hypoallergenic / Anti-tarnish'. The brand guidelines ask for warm prose instead, and shoppers scan for both. A locked list gives the trust signals without 150 people retyping them 150 ways, and keeps the description free to be prose.",
+      "_not_a_collection": "Specs drive no collection and no rule. A shopper filters by material, not by hypoallergenic, so this stays a display fact."
     },
     {
       "name": "Pack size",
@@ -67,7 +94,10 @@
       "pin": true,
       "description": "Which box this ships in. The owner picks; nobody measures. Weight goes in Shopify's own weight field, in grams.",
       "validations": [
-        { "name": "choices", "value": "[\"pouch\",\"small-box\",\"bangle-box\",\"large-box\"]" }
+        {
+          "name": "choices",
+          "value": "[\"pouch\",\"small-box\",\"bangle-box\",\"large-box\"]"
+        }
       ],
       "_why": "Indian couriers bill on max(actual, volumetric). Jewellery is light, so actual weight almost always wins and per-product L×W×H would be four more fields to guess at. A named box keeps packing consistent and lets box→dimensions live in ONE table if a courier integration ever needs volumetric.",
       "_not_a_metafield": "Weight itself is Shopify's native per-variant field. Duplicating it here would create two answers to one question."
@@ -90,7 +120,12 @@
       "type": "list.file_reference",
       "pin": true,
       "description": "Styled vertical clips, usually repurposed from Instagram. These render in their own strip, deliberately NOT in the product media gallery. A worn/turning trust video belongs in the gallery instead — upload that as ordinary product media.",
-      "validations": [{ "name": "file_type_options", "value": "[\"Video\"]" }],
+      "validations": [
+        {
+          "name": "file_type_options",
+          "value": "[\"Video\"]"
+        }
+      ],
       "_why": "A 9:16 marketing clip sitting between two packshots makes the gallery incoherent. Different role, different surface."
     },
     {
@@ -111,7 +146,12 @@
       "type": "file_reference",
       "pin": true,
       "description": "A 3–5 second loop standing in for this category's static tile image. Muted, no audio track, under 8MB, with a poster frame. One per category.",
-      "validations": [{ "name": "file_type_options", "value": "[\"Video\"]" }],
+      "validations": [
+        {
+          "name": "file_type_options",
+          "value": "[\"Video\"]"
+        }
+      ],
       "_why": "A Shopify collection has one image field and no video field, so the guidelines' looping category tiles are not expressible natively."
     }
   ]

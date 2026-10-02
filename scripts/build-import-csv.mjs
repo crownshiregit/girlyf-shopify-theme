@@ -42,7 +42,11 @@ if (errors.length) {
   process.exit(1);
 }
 
-const rows = toShopifyRows(records);
+// Shopify serves Files from a per-store prefix and keeps the filename, so the
+// sheet holds `girlyf-necklaces-geo-lariat-1.jpg` and this builds the URL. The
+// prefix is store data, so it lives beside the store name in package.json.
+const { config } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+const rows = toShopifyRows(records, { cdnPrefix: config.cdnPrefix || '' });
 const products = new Set(rows.map((r) => r.Handle)).size;
 
 console.log(`\n✓ ${records.length} sheet row(s) → ${products} product(s), ${rows.length} variant row(s)`);

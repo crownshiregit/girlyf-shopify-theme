@@ -5,14 +5,15 @@
   "description": "Girlyf storefront — Shopify theme, catalogue architecture and the fill sheet handed to the Girlyf team",
   "_config": "THE store this repo targets. Changing it here changes it everywhere: the Admin-API write guard in scripts/shopify-data/client.mjs reads this, and the theme commands below interpolate it as $npm_package_config_store.",
   "config": {
-    "store": "girlyf-dev.myshopify.com"
+    "store": "girlyf-dev.myshopify.com",
+    "cdnPrefix": "https://cdn.shopify.com/s/files/1/0810/7304/5615/files/"
   },
   "scripts": {
     "test": "node --test \"scripts/**/*.test.mjs\"",
     "check": "npm run check:liquid && npm test",
     "check:liquid": "shopify theme check --path .",
     "sheet:check": "node scripts/build-import-csv.mjs sheet/girlyf-fill-sheet-template.csv --validate",
-    "sheet:build": "node scripts/build-import-csv.mjs",
+    "sheet:build": "node scripts/build-import-csv.mjs sheet/girlyf-fill-sheet-template.csv",
     "homepage:build": "node scripts/build-homepage.mjs",
     "data:authorize": "node scripts/shopify-data/authorize.mjs",
     "data:plan": "node scripts/shopify-data/apply.mjs --dry-run",
