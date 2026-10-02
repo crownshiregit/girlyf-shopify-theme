@@ -20,6 +20,8 @@
     "data:apply": "node scripts/shopify-data/apply.mjs",
     "files:plan": "node scripts/shopify-data/upload-theme-files.mjs --dry-run",
     "files:upload": "node scripts/shopify-data/upload-theme-files.mjs",
+    "photos:plan": "node scripts/shopify-data/upload-product-photos.mjs --dry-run",
+    "photos:upload": "node scripts/shopify-data/upload-product-photos.mjs",
     "demo:plan": "node scripts/shopify-data/seed-demo.mjs --dry-run",
     "demo:seed": "node scripts/shopify-data/seed-demo.mjs",
     "dev": "shopify theme dev --store $npm_package_config_store --theme-editor-sync",
